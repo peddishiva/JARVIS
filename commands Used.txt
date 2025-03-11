@@ -1,0 +1,42 @@
+#to add  files to git: git add .
+#to commit files to git: git commit -m "message"
+#to push files to git: git push
+#to pull files from git: git pull
+#to create virtual environment: python -m venv venv
+#to run file: python main.py
+#to activate virtual environment: source venv/bin/activate -> copy the path of activate and run in powershell
+#to deactivate virtual environment: deactivate
+#to install packages: pip install package_name
+#to install packages in virtual environment: pip install --user package_name
+
+
+
+installation of pygame:
+upgrade to pip first and then install pygame. this is for safe installation
+#pip install --upgrade pip
+#pip install pygame
+#pip install eel
+
+day -3
+voice generation -
+used libraries  - pyttsx3 and sapi5
+
+#pip install pyttsx3
+#pip install sapi5
+#pip install speechrecognition
+#pip install pyaudio
+#pip install pywhatkit
+#pip install webbrowser
+#pip install time
+
+creating of database
+#import sqlite
+in file db.py
+#conn = sqlite3.connect('database.db')
+this above line is to connect to the database
+
+
+installation of this module (free version without API)
+#pip install pvporcupine==1.9.5
+for installation of this module used for pyaudio automation on gui
+#pip install pyautogui
