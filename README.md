@@ -21,7 +21,7 @@ JARVIS is currently designed for **Windows**. The source starts Microsoft Edge i
 Recommended environment:
 
 - Windows 10/11
-- Python 3.10+ (the repository contains Python 3.12 bytecode, so Python 3.12 is a reasonable choice)
+- Python 3.10+ (Python 3.12 is a reasonable choice for this repository)
 - Working microphone
 - Speakers/headphones
 - Microsoft Edge
@@ -63,7 +63,7 @@ python -m pip install --upgrade pip
 
 ### 4. Install Python dependencies
 
-The current repository does not include a `requirements.txt`, so install the dependencies used by the source code:
+The repository does not currently include a `requirements.txt`, so install the packages used by the source code:
 
 ```powershell
 pip install eel pyttsx3 SpeechRecognition PyAudio pywhatkit pyautogui pygame pvporcupine==1.9.5 hugchat
@@ -72,9 +72,9 @@ pip install eel pyttsx3 SpeechRecognition PyAudio pywhatkit pyautogui pygame pvp
 Notes:
 
 - `webbrowser`, `sqlite3`, `subprocess`, `multiprocessing`, `os`, `sys`, `time`, `struct`, and `urllib.parse` are part of Python's standard library and do not need separate installation.
-- `PyAudio` provides microphone access for the speech-recognition and Porcupine paths.
+- `PyAudio` provides microphone access for speech recognition and Porcupine.
 - If `pygame` installation fails, upgrade pip first and retry.
-- The project currently imports `pvporcupine` with the legacy `keywords=["jarvis", "alexa"]` API, so the pinned `1.9.5` version is intentional.
+- The project uses the legacy Porcupine `keywords=["jarvis", "alexa"]` API, so `pvporcupine==1.9.5` is used here.
 
 ### 5. Verify the AI chatbot session
 
@@ -84,7 +84,7 @@ The chatbot initializes HuggingChat using:
 engine/cookies.json
 ```
 
-The application expects this session data to be available. Do not publish your personal HuggingChat cookies or replace the tracked file with private credentials. If the existing session is invalid, recreate the HuggingChat authentication/session data using a safe local copy and keep secrets out of Git.
+The application expects this session data to be available. Treat it as sensitive authentication material. If the session is invalid, recreate the authentication/session data locally and do not commit private cookies or credentials.
 
 ### 6. Start JARVIS
 
@@ -94,7 +94,7 @@ For the normal dual-process launcher:
 python run.py
 ```
 
-`run.py` starts the Eel UI and the hotword listener as separate processes. fileciteturn4file0
+`run.py` starts the Eel UI and hotword listener as separate processes.
 
 You can also start the UI directly:
 
@@ -102,7 +102,7 @@ You can also start the UI directly:
 python main.py
 ```
 
-`main.py` initializes the `www/` Eel web app, plays the startup sound, and opens Microsoft Edge at `http://localhost:8000/index.html` in app mode. fileciteturn3file0
+`main.py` initializes the `www/` Eel web app, plays the startup sound, and opens Microsoft Edge at `http://localhost:8000/index.html` in app mode.
 
 ## How It Works
 
@@ -139,7 +139,7 @@ Hotword Listener (Porcupine)
                     pyttsx3 / SAPI5
 ```
 
-The command router recognizes requests such as `open ...`, YouTube requests, WhatsApp message/call/video-call requests, and sends other text to the chatbot. fileciteturn6file0
+The command router handles `open ...` requests, YouTube requests, WhatsApp message/call/video-call requests, and sends other queries to the chatbot.
 
 ## Project Structure
 
@@ -173,9 +173,9 @@ JARVIS uses a local SQLite file named `jarvis.db`. The code expects tables for:
 - `web_command` — maps a command name to a web URL.
 - `contacts` — stores contact names and mobile numbers used by WhatsApp automation.
 
-The database helper code documents example SQL for creating/populating these tables in `engine/db.py`. fileciteturn9file0
+The database helper code in `engine/db.py` contains example SQL for creating and populating these tables.
 
-Because the application opens `jarvis.db` directly, place the database in the project root or initialize the tables before using database-backed commands.
+Because the application opens `jarvis.db` directly, initialize the database before relying on database-backed commands. The repository's database helper contains commented examples for creating the tables and inserting records.
 
 ## Customization
 
@@ -187,15 +187,13 @@ Edit `engine/config.py`:
 ASSISTANT_NAME = "jarvis"
 ```
 
-The current configuration uses `jarvis`. fileciteturn8file0
-
 ### Add applications or websites
 
-Use the SQLite tables described in `engine/db.py` to register desktop applications and web commands. For example, a system command stores an application name and its Windows executable path, while a web command stores a name and URL. fileciteturn9file0
+Use the SQLite tables described in `engine/db.py` to register desktop applications and web commands. A system command stores an application name and Windows executable path; a web command stores a name and URL.
 
 ### Add contacts
 
-The WhatsApp feature looks up contacts by name in the `contacts` table and expects a mobile number. The current implementation automatically adds the `+91` country prefix when a number does not already start with it. fileciteturn5file0
+The WhatsApp feature looks up contacts by name in the `contacts` table and expects a mobile number. The current implementation automatically adds the `+91` country prefix when a number does not already start with it.
 
 ## Example Commands
 
@@ -239,25 +237,25 @@ Check Windows microphone permissions, confirm the correct input device is select
 
 ### JARVIS starts but Edge does not open
 
-The launcher explicitly invokes `msedge.exe`, so Microsoft Edge must be installed and available through the Windows command path. fileciteturn3file0
+The launcher explicitly invokes `msedge.exe`, so Microsoft Edge must be installed and available through the Windows command path.
 
 ### Hotword detection does not start
 
-The hotword listener uses Porcupine and PyAudio, and the code opens the default microphone stream. Check microphone permissions and confirm `pvporcupine` and `PyAudio` are installed. fileciteturn5file0
+The hotword listener uses Porcupine and PyAudio and opens the default microphone stream. Check microphone permissions and confirm `pvporcupine==1.9.5` and `PyAudio` are installed.
 
 ### WhatsApp automation fails
 
-The current implementation relies on Windows `whatsapp://send?...` links plus keyboard automation with `pyautogui`. Make sure WhatsApp is installed/configured and that the target contact exists in the local database. fileciteturn5file0
+The implementation relies on Windows `whatsapp://send?...` links plus keyboard automation with `pyautogui`. Make sure WhatsApp is installed/configured and that the target contact exists in the local database.
 
 ### AI chatbot does not respond
 
-The chatbot creates a HuggingChat client from `engine/cookies.json`. An expired or invalid session file will prevent authenticated chatbot use. fileciteturn5file0
+The chatbot creates a HuggingChat client from `engine/cookies.json`. An expired or invalid session file will prevent authenticated chatbot use.
 
 ## Security Notes
 
-- Treat `engine/cookies.json` as sensitive authentication material. Rotate/remove it if it contains an exposed personal session.
+- Treat `engine/cookies.json` as sensitive authentication material. Rotate/remove it if a personal session has been exposed.
 - Do not commit passwords, API keys, authentication cookies, or personal contacts.
-- Review the contents of `jarvis.db` before publishing the repository if it contains real phone numbers or other personal information.
+- Review `jarvis.db` before publishing if it contains real phone numbers or other personal information.
 - JARVIS can launch applications and automate external services, so only run commands you trust.
 
 ## Development Commands
