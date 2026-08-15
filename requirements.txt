@@ -1,0 +1,10 @@
+eel
+openai
+python-dotenv
+pyttsx3
+SpeechRecognition
+PyAudio
+pywhatkit
+pyautogui
+pygame
+pvporcupine==1.9.5

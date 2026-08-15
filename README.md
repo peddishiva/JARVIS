@@ -1,31 +1,32 @@
 # JARVIS
 
-A Windows-first Python desktop voice assistant with a local web UI. JARVIS combines speech recognition, text-to-speech, hotword detection, desktop/web app launching, YouTube playback, WhatsApp automation, SQLite-backed contacts/commands, and an AI chatbot powered through HuggingChat.
+A Windows-first Python desktop voice assistant with a local Eel web UI. JARVIS combines speech recognition, text-to-speech, hotword detection, desktop/web app launching, YouTube playback, WhatsApp automation, SQLite-backed commands and contacts, and an LLM accessed through OpenRouter.
 
 ## Features
 
 - Voice input using `SpeechRecognition` and the system microphone.
-- Voice output using `pyttsx3` with the Windows SAPI5 speech engine.
+- Voice output using `pyttsx3` with Windows SAPI5.
 - Wake-word detection for **JARVIS** / **Alexa** using Picovoice Porcupine.
-- Browser-style desktop UI built with **Eel**, served from the `www/` directory.
+- Desktop UI built with **Eel** and the files under `www/`.
 - Opens Windows applications and registered web commands from SQLite.
 - Plays YouTube searches through `pywhatkit`.
-- Sends WhatsApp messages and starts WhatsApp calls/video calls using Windows URL/developer automation.
-- AI chat responses through `hugchat`, using the repository's `engine/cookies.json` session data.
-- Local SQLite database support for commands and contacts.
+- Sends WhatsApp messages and starts WhatsApp calls/video calls through Windows URL and keyboard automation.
+- Conversational AI through the **OpenRouter API**.
+- Configurable OpenRouter model through an environment variable.
 
 ## Requirements
 
-JARVIS is currently designed for **Windows**. The source starts Microsoft Edge in app mode and uses Windows-specific APIs such as SAPI5 and `os.startfile`.
+JARVIS is currently designed for **Windows**. The application starts Microsoft Edge in app mode and uses Windows-specific functionality such as SAPI5 and `os.startfile`.
 
-Recommended environment:
+You need:
 
-- Windows 10/11
+- Windows 10 or Windows 11
 - Python 3.10+ (Python 3.12 is a reasonable choice for this repository)
-- Working microphone
-- Speakers/headphones
+- A working microphone
+- Speakers or headphones
 - Microsoft Edge
-- WhatsApp Desktop or a Windows environment capable of opening `whatsapp://` links
+- WhatsApp Desktop or a Windows environment that can open `whatsapp://` links
+- An OpenRouter API key for AI chat
 
 ## Installation
 
@@ -36,110 +37,113 @@ git clone https://github.com/peddishiva/JARVIS.git
 cd JARVIS
 ```
 
-### 2. Create a virtual environment
+### 2. Create and activate a virtual environment
 
 ```powershell
 python -m venv venv
-```
-
-Activate it in PowerShell:
-
-```powershell
 .\venv\Scripts\Activate.ps1
 ```
 
-If PowerShell blocks script execution for the current session, run:
+If PowerShell blocks activation for the current session:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\venv\Scripts\Activate.ps1
 ```
 
-### 3. Upgrade pip
+### 3. Install dependencies
 
 ```powershell
 python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-### 4. Install Python dependencies
+### 4. Configure OpenRouter
 
-The repository does not currently include a `requirements.txt`, so install the packages used by the source code:
+Create your local environment file:
 
 ```powershell
-pip install eel pyttsx3 SpeechRecognition PyAudio pywhatkit pyautogui pygame pvporcupine==1.9.5 hugchat
+copy .env.example .env
 ```
 
-Notes:
+Open `.env` and set:
 
-- `webbrowser`, `sqlite3`, `subprocess`, `multiprocessing`, `os`, `sys`, `time`, `struct`, and `urllib.parse` are part of Python's standard library and do not need separate installation.
-- `PyAudio` provides microphone access for speech recognition and Porcupine.
-- If `pygame` installation fails, upgrade pip first and retry.
-- The project uses the legacy Porcupine `keywords=["jarvis", "alexa"]` API, so `pvporcupine==1.9.5` is used here.
-
-### 5. Verify the AI chatbot session
-
-The chatbot initializes HuggingChat using:
-
-```text
-engine/cookies.json
+```env
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+OPENROUTER_MODEL=openrouter/free
 ```
 
-The application expects this session data to be available. Treat it as sensitive authentication material. If the session is invalid, recreate the authentication/session data locally and do not commit private cookies or credentials.
+JARVIS uses OpenRouter's OpenAI-compatible API endpoint. The API key stays in `.env` and is excluded from Git by `.gitignore`.
+
+`openrouter/free` is used as the default model router. You can replace it with another OpenRouter model ID whenever you want without changing the Python code.
+
+### 5. Prepare the local database
+
+JARVIS expects a local SQLite database named `jarvis.db` in the project root. It is intentionally ignored by Git because it can contain personal contacts and machine-specific application paths.
+
+The database helper in `engine/db.py` contains example SQL for these tables:
+
+- `sys_command` — application names and Windows executable paths.
+- `web_command` — command names and web URLs.
+- `contacts` — contact names and mobile numbers used by WhatsApp automation.
+
+If you already have a working `jarvis.db`, place it in the project root. Otherwise initialize the required tables using the examples in `engine/db.py` before using database-backed commands.
 
 ### 6. Start JARVIS
 
-For the normal dual-process launcher:
+For the normal launcher, which starts the UI and hotword listener in separate processes:
 
 ```powershell
 python run.py
 ```
 
-`run.py` starts the Eel UI and hotword listener as separate processes.
-
-You can also start the UI directly:
+To start only the Eel UI process:
 
 ```powershell
 python main.py
 ```
 
-`main.py` initializes the `www/` Eel web app, plays the startup sound, and opens Microsoft Edge at `http://localhost:8000/index.html` in app mode.
+The UI launcher initializes `www/`, plays the startup sound, and opens Microsoft Edge at the local JARVIS page.
 
 ## How It Works
 
 ```text
 Microphone
-   │
-   ▼
-Hotword Listener (Porcupine)
-   │
-   └── detects "Jarvis" / "Alexa"
-           │
-           ▼
-        Win + J
-           │
-           ▼
-      Eel Web Interface
-           │
-           ▼
-    SpeechRecognition
-           │
-           ▼
+    │
+    ▼
+Porcupine Hotword Listener
+    │
+    └── "Jarvis" / "Alexa"
+             │
+             ▼
+          Win + J
+             │
+             ▼
+       Eel Web Interface
+             │
+             ▼
+      Speech Recognition
+             │
+             ▼
        Command Router
-        ┌────┼───────────────┬──────────────┐
-        ▼    ▼               ▼              ▼
-     System Web          YouTube        WhatsApp
-     Commands Commands      Search        Actions
-        │    │               │              │
-        └────┴───────────────┴──────────────┘
+       ┌─────┼──────────────┬─────────────┐
+       ▼     ▼              ▼             ▼
+     System  Web          YouTube      WhatsApp
+     Apps    Commands      Search       Actions
+       │     │              │             │
+       └─────┴──────────────┴─────────────┘
                          │
                          ▼
-                    HuggingChat AI
+                 OpenRouter API
                          │
                          ▼
-                    pyttsx3 / SAPI5
+                  Configured LLM
+                         │
+                         ▼
+                    pyttsx3/SAPI5
 ```
 
-The command router handles `open ...` requests, YouTube requests, WhatsApp message/call/video-call requests, and sends other queries to the chatbot.
+Normal conversational requests are routed to `chatBot()`, which sends the request to the configured OpenRouter model and then speaks the returned response.
 
 ## Project Structure
 
@@ -147,11 +151,10 @@ The command router handles `open ...` requests, YouTube requests, WhatsApp messa
 JARVIS/
 ├── engine/
 │   ├── command.py       # Speech recognition and command routing
-│   ├── config.py        # Assistant name configuration
-│   ├── cookies.json     # HuggingChat session/cookie data
+│   ├── config.py        # Assistant name
 │   ├── db.py            # SQLite schema/data helper code
-│   ├── features.py      # Hotword, app, web, YouTube, WhatsApp and AI features
-│   └── helper.py        # Text/YouTube helper functions
+│   ├── features.py      # Assistant features and OpenRouter LLM integration
+│   └── helper.py        # Text/YouTube helpers
 ├── www/
 │   ├── assets/          # Audio, icon and vendor assets
 │   ├── controller.js
@@ -159,45 +162,28 @@ JARVIS/
 │   ├── main.js
 │   ├── script.js
 │   └── style.css
+├── .env.example         # OpenRouter configuration template
+├── .gitignore
 ├── main.py              # Starts the Eel application
-├── run.py               # Starts UI + hotword listener processes
-├── commands Used.txt    # Original setup/command notes
+├── run.py               # Starts UI + hotword listener
+├── requirements.txt     # Python dependencies
 └── README.md
 ```
 
-## Database Setup
+## OpenRouter Configuration
 
-JARVIS uses a local SQLite file named `jarvis.db`. The code expects tables for:
+The LLM integration is intentionally isolated to `chatBot()` in `engine/features.py`.
 
-- `sys_command` — maps a command name to a Windows executable path.
-- `web_command` — maps a command name to a web URL.
-- `contacts` — stores contact names and mobile numbers used by WhatsApp automation.
+Environment variables:
 
-The database helper code in `engine/db.py` contains example SQL for creating and populating these tables.
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `OPENROUTER_API_KEY` | Yes for AI chat | — | Your OpenRouter API key |
+| `OPENROUTER_MODEL` | No | `openrouter/free` | OpenRouter model/router ID |
 
-Because the application opens `jarvis.db` directly, initialize the database before relying on database-backed commands. The repository's database helper contains commented examples for creating the tables and inserting records.
-
-## Customization
-
-### Change the assistant name
-
-Edit `engine/config.py`:
-
-```python
-ASSISTANT_NAME = "jarvis"
-```
-
-### Add applications or websites
-
-Use the SQLite tables described in `engine/db.py` to register desktop applications and web commands. A system command stores an application name and Windows executable path; a web command stores a name and URL.
-
-### Add contacts
-
-The WhatsApp feature looks up contacts by name in the `contacts` table and expects a mobile number. The current implementation automatically adds the `+91` country prefix when a number does not already start with it.
+Do **not** put the API key directly in Python source code or commit `.env` to GitHub.
 
 ## Example Commands
-
-Try commands such as:
 
 ```text
 Open YouTube
@@ -207,24 +193,25 @@ Send a message to Shiva
 Phone call to Shiva
 Video call to Shiva
 What is machine learning?
+Explain recursion in simple words
 ```
 
-The exact available application names depend on entries in your `jarvis.db` database.
+The exact application names available through `open ...` depend on the entries in your local `jarvis.db`.
 
 ## Troubleshooting
 
 ### `ModuleNotFoundError`
 
-Make sure the virtual environment is active and reinstall the dependency:
+Activate the virtual environment and reinstall dependencies:
 
 ```powershell
 .\venv\Scripts\Activate.ps1
-pip install <package-name>
+pip install -r requirements.txt
 ```
 
 ### PyAudio installation fails
 
-Confirm you are using a supported Windows/Python combination and that pip is up to date:
+Make sure you are using a supported Windows/Python combination and upgrade pip:
 
 ```powershell
 python -m pip install --upgrade pip
@@ -233,44 +220,52 @@ pip install PyAudio
 
 ### Microphone does not work
 
-Check Windows microphone permissions, confirm the correct input device is selected, and test the microphone with another application.
+Check Windows microphone permissions, confirm the correct input device is selected, and test the microphone in another application.
 
 ### JARVIS starts but Edge does not open
 
-The launcher explicitly invokes `msedge.exe`, so Microsoft Edge must be installed and available through the Windows command path.
+`main.py` invokes `msedge.exe` directly. Make sure Microsoft Edge is installed and available through the Windows command path.
 
 ### Hotword detection does not start
 
-The hotword listener uses Porcupine and PyAudio and opens the default microphone stream. Check microphone permissions and confirm `pvporcupine==1.9.5` and `PyAudio` are installed.
+The hotword listener uses Porcupine and PyAudio with the default microphone. Check microphone permissions and confirm both packages installed successfully.
+
+### OpenRouter says the API key is missing
+
+Make sure `.env` exists in the project root and contains:
+
+```env
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+```
+
+Restart JARVIS after changing `.env`.
+
+### OpenRouter authentication fails
+
+Verify that the key is valid, has not been revoked, and is copied without surrounding quotes or extra spaces.
+
+### The selected model is unavailable
+
+Change `OPENROUTER_MODEL` to a currently available model ID in OpenRouter. The default `openrouter/free` router may also change which underlying free model serves a request.
 
 ### WhatsApp automation fails
 
-The implementation relies on Windows `whatsapp://send?...` links plus keyboard automation with `pyautogui`. Make sure WhatsApp is installed/configured and that the target contact exists in the local database.
-
-### AI chatbot does not respond
-
-The chatbot creates a HuggingChat client from `engine/cookies.json`. An expired or invalid session file will prevent authenticated chatbot use.
+The current implementation relies on Windows `whatsapp://send?...` links and `pyautogui` keyboard automation. Make sure WhatsApp is installed/configured and that the target contact exists in `jarvis.db`.
 
 ## Security Notes
 
-- Treat `engine/cookies.json` as sensitive authentication material. Rotate/remove it if a personal session has been exposed.
-- Do not commit passwords, API keys, authentication cookies, or personal contacts.
-- Review `jarvis.db` before publishing if it contains real phone numbers or other personal information.
+- Keep `OPENROUTER_API_KEY` in `.env` and never commit it.
+- Do not commit personal contacts or machine-specific paths from `jarvis.db`.
+- Do not commit authentication cookies or session data.
 - JARVIS can launch applications and automate external services, so only run commands you trust.
 
 ## Development Commands
 
 ```powershell
-# Activate environment
 .\venv\Scripts\Activate.ps1
-
-# Run the complete assistant
+pip install -r requirements.txt
 python run.py
-
-# Run the UI launcher directly
 python main.py
-
-# Deactivate environment
 deactivate
 ```
 
@@ -278,8 +273,8 @@ deactivate
 
 1. Fork the repository.
 2. Create a feature branch.
-3. Test the change on Windows.
-4. Keep credentials and personal data out of commits.
+3. Test changes on Windows.
+4. Keep API keys, cookies, contacts, and other personal data out of commits.
 5. Open a pull request with a clear description of the change.
 
 ## License
@@ -288,4 +283,4 @@ No license file is currently present in the repository. Unless a license is adde
 
 ## Acknowledgements
 
-JARVIS is built with open-source Python and web technologies including Eel, PyAudio, SpeechRecognition, pyttsx3, pygame, PyAutoGUI, PyWhatKit, Picovoice Porcupine, HuggingChat, SQLite, HTML, CSS, and JavaScript.
+JARVIS uses Python and web technologies including Eel, OpenRouter, OpenAI's Python client, PyAudio, SpeechRecognition, pyttsx3, pygame, PyAutoGUI, PyWhatKit, Picovoice Porcupine, SQLite, HTML, CSS, and JavaScript.
