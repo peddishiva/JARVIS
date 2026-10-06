@@ -1,6 +1,57 @@
-/envjarvis
-contacts.csv
-jarvis.db
-/engine/__pycache__
+# Environment & Secrets
 .env
-*.pyc
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials/
+cookies.json
+credentials.json
+secrets.json
+token.json
+
+# Python & Virtual Environments
+venv/
+.venv/
+env/
+env*/
+envjarvis/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Databases & Local Data
+*.db
+*.sqlite
+*.sqlite3
+jarvis.db
+contacts.csv
+
+# Runtime & Generated Files
+*.log
+logs/
+tmp/
+temp/
+.cache/
+dist/
+build/
+*.tmp
+*.bak
+
+# IDEs & Editor Configuration
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
