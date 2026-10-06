@@ -91,6 +91,9 @@ def openCommand(query):
 
 def PlayYoutube(query):
     search_term = extract_yt_term(query)
+    if not search_term:
+        speak("What would you like to play on YouTube?")
+        return
     speak("Playing " + search_term + " on YouTube")
     kit.playonyt(search_term)
 
@@ -142,7 +145,7 @@ def findContact(query):
         "call",
         "send",
         "message",
-        "wahtsapp",
+        "whatsapp",
         "video",
     ]
     query = remove_words(query, words_to_remove)

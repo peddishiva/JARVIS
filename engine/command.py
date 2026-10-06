@@ -53,25 +53,26 @@ def allCommands(message=1):
          eel.senderText(query)
     
     try:
+        normalized_query = query.lower().strip() if isinstance(query, str) else str(query).lower().strip()
         
-        if "open" in query:
+        if "open" in normalized_query:
             from engine.features import openCommand
-            openCommand(query)
-        elif "on youtube" in query:
+            openCommand(normalized_query)
+        elif "on youtube" in normalized_query:
             from engine.features import PlayYoutube
             PlayYoutube(query)
-        elif "send a message" in query or "phone call" in query or "video call" in query:
+        elif "send a message" in normalized_query or "phone call" in normalized_query or "video call" in normalized_query:
             from engine.features import findContact, whatsApp
             message = ""
-            contact_no, name = findContact(query)
+            contact_no, name = findContact(normalized_query)
             if(contact_no != 0):
 
-                if "send a message" in query:
+                if "send a message" in normalized_query:
                     message = 'message'
                     speak("what message to send")
                     query = takecommand()
                     
-                elif "phone call" in query:
+                elif "phone call" in normalized_query:
                     message = 'call'
                 else:
                     message = 'video call'
