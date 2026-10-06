@@ -18,6 +18,7 @@ from openai import OpenAI
 
 from engine.command import speak
 from engine.config import ASSISTANT_NAME
+from engine.db import init_db
 from engine.helper import extract_yt_term, remove_words
 
 
@@ -38,6 +39,7 @@ if OPENROUTER_API_KEY:
     )
 
 
+init_db()
 conn = sqlite3.connect("jarvis.db")
 cursor = conn.cursor()
 

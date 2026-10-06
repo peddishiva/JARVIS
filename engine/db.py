@@ -1,66 +1,77 @@
-import csv
+import os
 import sqlite3
 
-con = sqlite3.connect("jarvis.db") #for connection to database
-cursor = con.cursor() #variable to use in database to access database connection features
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_DB_PATH = os.path.join(BASE_DIR, "jarvis.db")
 
-#query = "CREATE TABLE IF NOT EXISTS sys_command(id integer primary key, name VARCHAR(100), path VARCHAR(1000))"
-#cursor.execute(query)
-
-#query = "INSERT INTO sys_command VALUES (null,'onenote', 'C:\\Program Files\\Microsoft Office\\root\\Office16\\ONENOTE.EXE')"
-#cursor.execute(query)
-#con.commit()
-
-#query = "CREATE TABLE IF NOT EXISTS web_command(id integer primary key, name VARCHAR(100), url VARCHAR(1000))"
-#cursor.execute(query)
-
-#query = "INSERT INTO web_command VALUES (null,'youtube', 'https://www.youtube.com/')"
-#cursor.execute(query)
-#con.commit()
-
-#this command is used to delete the data from the web)commands table in database 
-#query = "DELETE FROM sys_command WHERE name='youtube'"
-#cursor.execute(query)
-#con.commit()
-
-# testing module
-#app_name = "android studios"
-#cursor.execute("SELECT path FROM sys_command WHERE name = ?", (app_name,))
-#result = cursor.fetchone()
-#print(result)
-
-#cursor.execute('''CREATE TABLE IF NOT EXISTS contacts (id integer primary key, name VARCHAR(200), mobile_no VARCHAR(255), email VARCHAR(255) NULL)''')
-
-# Specify the column indices you want to import (0-based index)
-# Example: Importing the 1st and 3rd columns
-#desired_columns_indices = [0, 18]
-
-# Read data from CSV and insert into SQLite table for the desired columns
-#with open('contacts.csv', 'r', encoding='utf-8') as csvfile:
-#    csvreader = csv.reader(csvfile)
-#    for row in csvreader:
-#        selected_data = [row[i] for i in desired_columns_indices]
-#        cursor.execute(''' INSERT INTO contacts (id, 'name', 'mobile_no') VALUES (null, ?, ?);''', tuple(selected_data))
-
-# Commit changes and close connection
-#con.commit()
-#con.close()
+DEFAULT_WEB_COMMANDS = [
+    ("youtube", "https://www.youtube.com/"),
+    ("google", "https://www.google.com/"),
+    ("canva", "https://www.canva.com/"),
+    ("amazon", "https://www.amazon.in/"),
+    ("flipkart", "https://www.flipkart.com/"),
+    ("myntra", "https://www.myntra.com/"),
+    ("instagram", "https://www.instagram.com/"),
+    ("snapchat", "https://www.snapchat.com/"),
+    ("ajio", "https://www.ajio.com/"),
+    ("blackbox", "https://www.blackbox.ai/"),
+    ("chatgpt", "https://chatgpt.com/"),
+]
 
 
-# this is the code to insert a single contact value into the database
-#query = "INSERT INTO contacts VALUES (null,'lekhaj', '1234567890', NULL)"
-#cursor.execute(query)
-#con.commit()
+def init_db(db_path=None):
+    """Initialize the JARVIS database schema and safe default web commands.
 
-# this is the code to insert a single delete value into the database
-#query = "DELETE FROM contacts WHERE name='lekhaj'"
-#cursor.execute(query)
-#con.commit()
+    Idempotent and safe: preserves existing tables, custom URLs, and user records.
+    """
+    if db_path is None:
+        db_path = DEFAULT_DB_PATH
 
-#to fetch the contact number from the database
-#query = 'Shiva'
-#query = query.strip().lower()
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
 
-#cursor.execute("SELECT mobile_no FROM contacts WHERE LOWER(name) LIKE ? OR LOWER(name) LIKE ?", ('%' + query + '%', query + '%'))
-#results = cursor.fetchall()
-#print(results[0][0])
+    # Exact production schema reproduction
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sys_command(
+            id integer primary key,
+            name VARCHAR(100),
+            path VARCHAR(1000)
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS web_command(
+            id integer primary key,
+            name VARCHAR(100),
+            url VARCHAR(1000)
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS contacts(
+            id integer primary key,
+            name VARCHAR(200),
+            mobile_no VARCHAR(255),
+            email VARCHAR(255) NULL
+        )
+        """
+    )
+
+    # Seed safe web commands idempotently without relying on UNIQUE constraint
+    for name, url in DEFAULT_WEB_COMMANDS:
+        cursor.execute("SELECT 1 FROM web_command WHERE LOWER(name) = ?", (name.lower(),))
+        if cursor.fetchone() is None:
+            cursor.execute("INSERT INTO web_command (name, url) VALUES (?, ?)", (name, url))
+
+    conn.commit()
+    conn.close()
+
+
+if __name__ == "__main__":
+    init_db()
+    print("Database initialized successfully.")
