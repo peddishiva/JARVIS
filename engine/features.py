@@ -18,7 +18,7 @@ from openai import OpenAI
 
 from engine.command import speak
 from engine.config import ASSISTANT_NAME
-from engine.db import init_db
+from app.database import init_db
 from engine.helper import extract_yt_term, remove_words
 
 
