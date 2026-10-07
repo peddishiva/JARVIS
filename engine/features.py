@@ -1,43 +1,30 @@
 import os
-import subprocess
 import sqlite3
 import struct
 import time
-import webbrowser
-from urllib.parse import quote
 
 import eel
-import openai
-import pyautogui
-import pygame
-import pywhatkit as kit
 import pyaudio
 import pvporcupine
-from dotenv import load_dotenv
-from openai import OpenAI
+import pygame
+import pywhatkit as kit
 
+from app.database import init_db
+from app.services.llm import (
+    OPENROUTER_API_KEY,
+    OPENROUTER_MODEL,
+    chat_bot,
+    get_openrouter_client,
+)
+from app.services.system import open_command
+from app.services.whatsapp import find_contact, send_whatsapp_message
+from app.services.youtube import play_youtube
 from engine.command import speak
 from engine.config import ASSISTANT_NAME
-from app.database import init_db
 from engine.helper import extract_yt_term, remove_words
 
 
-load_dotenv()
-
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openrouter/free")
-
-openrouter_client = None
-if OPENROUTER_API_KEY:
-    openrouter_client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=OPENROUTER_API_KEY,
-        default_headers={
-            "HTTP-Referer": "https://github.com/peddishiva/JARVIS",
-            "X-Title": "JARVIS",
-        },
-    )
-
+openrouter_client = get_openrouter_client()
 
 init_db()
 conn = sqlite3.connect("jarvis.db")
@@ -54,50 +41,11 @@ def playAssistantSound():
 
 
 def openCommand(query):
-    query = query.replace(ASSISTANT_NAME, "")
-    query = query.replace("open", "")
-    query.lower()
-
-    app_name = query.strip()
-
-    if app_name != "":
-        try:
-            cursor.execute(
-                "SELECT path FROM sys_command WHERE name IN (?)", (app_name,)
-            )
-            results = cursor.fetchall()
-
-            if len(results) != 0:
-                speak("Opening " + query)
-                os.startfile(results[0][0])
-
-            elif len(results) == 0:
-                cursor.execute(
-                    "SELECT url FROM web_command WHERE name IN (?)", (app_name,)
-                )
-                results = cursor.fetchall()
-
-                if len(results) != 0:
-                    speak("Opening " + query)
-                    webbrowser.open(results[0][0])
-
-                else:
-                    speak("Opening " + query)
-                    try:
-                        os.system("start " + query)
-                    except Exception:
-                        speak("not found")
-        except Exception:
-            speak("something went wrong")
+    return open_command(query, speak_fn=speak)
 
 
 def PlayYoutube(query):
-    search_term = extract_yt_term(query)
-    if not search_term:
-        speak("What would you like to play on YouTube?")
-        return
-    speak("Playing " + search_term + " on YouTube")
-    kit.playonyt(search_term)
+    return play_youtube(query, speak_fn=speak, player_fn=kit.playonyt)
 
 
 def hotword():
@@ -138,119 +86,18 @@ def hotword():
 
 
 def findContact(query):
-    words_to_remove = [
-        ASSISTANT_NAME,
-        "make",
-        "a",
-        "to",
-        "phone",
-        "call",
-        "send",
-        "message",
-        "whatsapp",
-        "video",
-    ]
-    query = remove_words(query, words_to_remove)
-
-    try:
-        query = query.strip().lower()
-        cursor.execute(
-            "SELECT mobile_no FROM contacts WHERE LOWER(name) LIKE ? OR LOWER(name) LIKE ?",
-            ("%" + query + "%", query + "%"),
-        )
-        results = cursor.fetchall()
-        print(results[0][0])
-        mobile_number_str = str(results[0][0])
-        if not mobile_number_str.startswith("+91"):
-            mobile_number_str = "+91" + mobile_number_str
-
-        return mobile_number_str, query
-    except Exception:
-        speak("not exist in contacts")
-        return 0, 0
+    return find_contact(query, speak_fn=speak)
 
 
 def whatsApp(mobile_no, message, flag, name):
-    if flag == "message":
-        target_tab = 19
-        jarvis_message = "message sent successfully to " + name
-    elif flag == "call":
-        target_tab = 14
-        message = ""
-        jarvis_message = "starting calling to " + name
-    else:
-        target_tab = 13
-        message = ""
-        jarvis_message = "starting video call with " + name
-
-    encoded_message = quote(message)
-    whatsapp_url = f"whatsapp://send?phone={mobile_no}&text={encoded_message}"
-    full_command = f'start "" "{whatsapp_url}"'
-
-    subprocess.run(full_command, shell=True)
-    time.sleep(5)
-    subprocess.run(full_command, shell=True)
-
-    pyautogui.hotkey("ctrl", "f")
-    for _ in range(1, target_tab):
-        pyautogui.hotkey("tab")
-    pyautogui.hotkey("enter")
-    speak(jarvis_message)
+    return send_whatsapp_message(mobile_no, message, flag, name, speak_fn=speak)
 
 
 def chatBot(query):
     """Send a conversational query to the configured OpenRouter model."""
-    if not OPENROUTER_API_KEY or openrouter_client is None:
-        message = "OpenRouter is not configured. Add your API key to the .env file."
-        print(message)
-        speak(message)
-        return message
-
-    try:
-        response = openrouter_client.chat.completions.create(
-            model=OPENROUTER_MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are JARVIS, a helpful Windows desktop voice assistant. "
-                        "Keep answers concise, natural, and suitable for being spoken aloud."
-                    ),
-                },
-                {"role": "user", "content": str(query).strip()},
-            ],
-        )
-
-        answer = response.choices[0].message.content
-        if not answer:
-            answer = "I could not generate a response."
-
-        print(answer)
-        speak(answer)
-        return answer
-
-    except openai.APIConnectionError:
-        message = "I cannot reach the OpenRouter service right now."
-        print(message)
-        speak(message)
-        return message
-    except openai.AuthenticationError:
-        message = "The OpenRouter API key is invalid or expired."
-        print(message)
-        speak(message)
-        return message
-    except openai.RateLimitError:
-        message = "The OpenRouter request limit has been reached."
-        print(message)
-        speak(message)
-        return message
-    except openai.APIError as error:
-        message = f"OpenRouter returned an API error: {error}"
-        print(message)
-        speak(message)
-        return message
-    except Exception as error:
-        message = "Something went wrong while contacting the AI service."
-        print(f"{message} {error}")
-        speak(message)
-        return message
+    return chat_bot(
+        query,
+        speak_fn=speak,
+        client=openrouter_client,
+        model=OPENROUTER_MODEL,
+    )
