@@ -9,7 +9,7 @@ import pvporcupine
 import pygame
 import pywhatkit as kit
 
-from app.database import init_db
+from app.database import DEFAULT_DB_PATH, init_db
 from app.services.llm import (
     OPENROUTER_API_KEY,
     OPENROUTER_MODEL,
@@ -23,18 +23,23 @@ from engine.command import speak
 from engine.config import ASSISTANT_NAME
 from engine.helper import extract_yt_term, remove_words
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SOUND_PATH = os.path.join(BASE_DIR, "www", "assets", "audio", "start_sound.mp3")
 
 openrouter_client = get_openrouter_client()
 
 init_db()
-conn = sqlite3.connect("jarvis.db")
+conn = sqlite3.connect(DEFAULT_DB_PATH)
 cursor = conn.cursor()
 
 
 @eel.expose
 def playAssistantSound():
     pygame.mixer.init()
-    pygame.mixer.music.load("www\\assets\\audio\\start_sound.mp3")
+    if os.path.exists(SOUND_PATH):
+        pygame.mixer.music.load(SOUND_PATH)
+    else:
+        pygame.mixer.music.load("www\\assets\\audio\\start_sound.mp3")
     pygame.mixer.music.play()
     while pygame.mixer.music.get_busy():
         pygame.time.Clock().tick(10)
