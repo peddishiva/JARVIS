@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}JARVIS Admin Dashboard{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('admin.static', filename='admin.css') }}">
+</head>
+<body>
+  {% if session.admin_id %}
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span>⚡ JARVIS Admin</span>
+      </div>
+      <ul class="sidebar-nav">
+        <li>
+          <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+            📊 Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('admin.contacts') }}" class="nav-link {% if request.endpoint == 'admin.contacts' %}active{% endif %}">
+            👥 Contacts
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('admin.web_commands') }}" class="nav-link {% if request.endpoint == 'admin.web_commands' %}active{% endif %}">
+            🌐 Web Commands
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('admin.system_commands') }}" class="nav-link {% if request.endpoint == 'admin.system_commands' %}active{% endif %}">
+            💻 System Commands
+          </a>
+        </li>
+      </ul>
+      <div class="sidebar-footer">
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          Logged in as <strong>{{ session.admin_username }}</strong>
+        </div>
+        <a href="{{ url_for('admin.logout') }}" class="btn btn-secondary btn-sm" style="width: 100%;">
+          Logout
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <header class="top-bar">
+        <h2 class="page-title">{% block page_title %}Dashboard{% endblock %}</h2>
+        <div>
+          <span style="font-size: 12px; color: var(--text-muted); background: var(--bg-dark); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color);">
+            🔒 Local Admin (127.0.0.1)
+          </span>
+        </div>
+      </header>
+
+      <main class="content-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-container">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+  {% else %}
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-container">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block auth_content %}{% endblock %}
+    </div>
+  </div>
+  {% endif %}
+
+  <script src="{{ url_for('admin.static', filename='admin.js') }}"></script>
+</body>
+</html>

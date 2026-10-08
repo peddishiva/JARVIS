@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Contacts — JARVIS Admin{% endblock %}
+{% block page_title %}Contacts Management{% endblock %}
+
+{% block content %}
+<div class="table-container">
+  <div class="table-header-bar">
+    <form method="GET" action="{{ url_for('admin.contacts') }}" class="search-box">
+      <input type="text" name="q" class="form-control" placeholder="Search by name, phone..." value="{{ query }}">
+      {% if query %}
+        <a href="{{ url_for('admin.contacts') }}" class="btn btn-secondary btn-sm">Clear</a>
+      {% endif %}
+    </form>
+    <button class="btn btn-primary" data-open-modal="modal-add-contact">
+      + Add Contact
+    </button>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 60px;">ID</th>
+        <th>Name</th>
+        <th>Mobile Number</th>
+        <th>Email</th>
+        <th style="width: 140px; text-align: right;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for contact in contacts %}
+      <tr>
+        <td style="color: var(--text-muted);">{{ contact.id }}</td>
+        <td><strong>{{ contact.name }}</strong></td>
+        <td><code>{{ contact.mobile_no }}</code></td>
+        <td style="color: var(--text-muted);">{{ contact.email or '—' }}</td>
+        <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+          <button class="btn btn-secondary btn-sm" data-open-modal="modal-edit-{{ contact.id }}">
+            Edit
+          </button>
+          <form method="POST" action="{{ url_for('admin.delete_contact', contact_id=contact.id) }}" class="delete-form" data-entity-name="contact '{{ contact.name }}'">
+            <button type="submit" class="btn btn-danger btn-sm">
+              Delete
+            </button>
+          </form>
+        </td>
+      </tr>
+
+      <!-- Edit Modal for this contact -->
+      <div class="modal" id="modal-edit-{{ contact.id }}">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title">Edit Contact</h3>
+            <button class="modal-close" data-close-modal>&times;</button>
+          </div>
+          <form method="POST" action="{{ url_for('admin.update_contact', contact_id=contact.id) }}">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" name="name" class="form-control" value="{{ contact.name }}" required maxlength="100">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mobile Number</label>
+              <input type="text" name="mobile_no" class="form-control" value="{{ contact.mobile_no }}" required placeholder="e.g. +919876543210">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email (Optional)</label>
+              <input type="email" name="email" class="form-control" value="{{ contact.email }}">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+              <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <tr>
+        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px;">
+          {% if query %}
+            No contacts found matching "{{ query }}".
+          {% else %}
+            No contacts registered yet. Click "+ Add Contact" to get started.
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Add Contact Modal -->
+<div class="modal" id="modal-add-contact">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Add New Contact</h3>
+      <button class="modal-close" data-close-modal>&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.create_contact') }}">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" name="name" class="form-control" required maxlength="100" placeholder="e.g. Shiva">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mobile Number</label>
+        <input type="text" name="mobile_no" class="form-control" required placeholder="e.g. +919876543210">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email (Optional)</label>
+        <input type="email" name="email" class="form-control" placeholder="name@example.com">
+      </div>
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Contact</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

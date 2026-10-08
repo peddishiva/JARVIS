@@ -8,6 +8,7 @@ A Windows-first Python desktop voice assistant with a local Eel web UI. JARVIS c
 - Voice output using `pyttsx3` with Windows SAPI5.
 - Wake-word detection for **JARVIS** / **Alexa** using Picovoice Porcupine.
 - Desktop UI built with **Eel** and frontend assets under `www/`.
+- **Admin Dashboard (Phase 5)** built with Flask, providing local administrative control for contacts, web commands, system commands, and authentication.
 - Opens Windows applications and registered web commands from SQLite.
 - Plays YouTube searches through `pywhatkit`.
 - Sends WhatsApp messages and starts WhatsApp calls/video calls through Windows URL and keyboard automation.
@@ -58,7 +59,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4. Configure OpenRouter
+### 4. Configure Environment Variables
 
 Create your local environment file:
 
@@ -71,6 +72,10 @@ Open `.env` and set:
 ```env
 OPENROUTER_API_KEY=your_openrouter_api_key_here
 OPENROUTER_MODEL=openrouter/free
+
+# Admin Dashboard configuration (optional overrides)
+ADMIN_HOST=127.0.0.1
+ADMIN_PORT=5005
 ```
 
 JARVIS uses OpenRouter's OpenAI-compatible API endpoint. The API key stays in `.env` and is excluded from Git by `.gitignore`.
@@ -79,7 +84,7 @@ JARVIS uses OpenRouter's OpenAI-compatible API endpoint. The API key stays in `.
 
 ### 5. Local Database Setup
 
-JARVIS uses a local SQLite database named `jarvis.db` in the project root. It is intentionally ignored by Git because it contains local user data, personal contacts, and machine-specific application paths.
+JARVIS uses a local SQLite database named `jarvis.db` in the project root. It is intentionally ignored by Git because it contains local user data, personal contacts, administrator credentials, and machine-specific application paths.
 
 Database initialization is managed authoritatively by `app.database`:
 - Schema initialization and default seeding run automatically on application startup.
@@ -89,28 +94,62 @@ Database initialization is managed authoritatively by `app.database`:
 python -c "from app.database import init_db; init_db()"
 ```
 
-The database schema defines three tables:
-- `sys_command` — application shortcuts and Windows executable paths.
-- `web_command` — command names and web URLs (pre-seeded with popular defaults).
+The database schema defines four tables:
+- `admin_user` — administrator account credentials (`username`, `password_hash`, `is_active`).
 - `contacts` — contact names and mobile numbers used by WhatsApp automation.
+- `web_command` — command names and web URLs (pre-seeded with popular defaults).
+- `sys_command` — application shortcuts and Windows executable paths.
 
 Users should populate their own local database with personal contacts and installed application paths.
 
 ### 6. Start JARVIS
 
-For the normal launcher, which starts the UI and hotword listener in separate processes:
+For the complete application launcher, which orchestrates the Eel UI, background Porcupine hotword listener, and local Admin Dashboard in separate processes:
 
 ```powershell
 python run.py
 ```
 
-To start only the Eel UI process:
+To start only the Eel UI assistant process:
 
 ```powershell
 python main.py
 ```
 
-The UI launcher initializes `www/`, plays the startup sound, and opens Microsoft Edge at the local JARVIS page.
+To start only the Admin Dashboard web server:
+
+```powershell
+python -m app.admin
+```
+
+The UI launcher initializes `www/`, plays the startup sound, and opens Microsoft Edge at the local JARVIS page. The Admin Dashboard becomes available at `http://127.0.0.1:5005/admin`.
+
+## Admin Dashboard (Phase 5)
+
+JARVIS includes a dedicated, local-first Admin Dashboard served at `http://127.0.0.1:5005/admin`.
+
+### First-Time Administrator Setup
+
+When accessing the dashboard for the first time without any administrator accounts configured:
+1. Navigate to `http://127.0.0.1:5005/admin` in any browser.
+2. The dashboard automatically redirects to `/admin/setup`.
+3. Enter your desired administrator username and a strong password (minimum 8 characters).
+4. The password is hashed using NIST-approved **scrypt** key derivation before being committed to SQLite. Plaintext passwords are never stored or logged.
+5. Once created, subsequent visits require logging in via `/admin/login`.
+
+### Dashboard Features
+
+- **System Overview (`/admin/dashboard`)**: Displays real-time aggregate counts for contacts, web commands, system commands, administrator accounts, database connectivity status, and AI service configuration state.
+- **Contacts Management (`/admin/contacts`)**: Full CRUD interface for personal contacts. Validates international phone formats and optional email syntax. Seamlessly updates records used by WhatsApp voice automation.
+- **Web Commands Management (`/admin/web-commands`)**: Full CRUD interface for browser shortcut commands. Validates URL syntax and rejects dangerous schemes (`javascript:`, `data:`, `file:`, `vbscript:`, etc.).
+- **System Commands Management (`/admin/system-commands`)**: Full CRUD interface for Windows desktop applications. Strictly validates executable paths, rejecting shell metacharacters and command injection payloads. Offers a safe "Test Launch" feature via `os.startfile` (no `shell=True`).
+- **Session Management & Logout (`/admin/logout`)**: Protected administrative views enforce server-side session checks with `HttpOnly` and `SameSite=Lax` cookies.
+
+### Local-Only Security Model
+
+- **Host Binding**: By default, the admin server binds strictly to `127.0.0.1` (localhost). It is not exposed to the local network or internet.
+- **Defense in Depth**: Parameterized SQLite queries throughout prevent SQL injection. Input validators reject command injection and dangerous protocol schemes.
+- **Secrets Protection**: Database files and `.env` credentials are never exposed via HTTP routes or client-side assets.
 
 ## Architecture
 
@@ -151,15 +190,24 @@ Core Layer Responsibilities:
 - `app.routing`: Authoritative command intent classification and routing.
 - `app.speech`: Authoritative speech recognition and text-to-speech engines.
 - `app.services`: Independent domain services (LLM, system launcher, WhatsApp, YouTube).
+- `app.admin`: Authoritative Phase 5 Admin Dashboard, authentication, and CRUD repositories.
 - `engine/`: Compatibility wrappers and re-exports preserving public signatures and Eel interface contracts.
 - `www/`: Static frontend assets (HTML, CSS, JavaScript) served via Eel.
-- `run.py`: Two-process entrypoint orchestrating the Eel UI and the background Porcupine hotword listener.
+- `run.py`: Multi-process entrypoint orchestrating the Eel UI, background Porcupine hotword listener, and local Admin Dashboard.
 
 ## Project Structure
 
 ```text
 JARVIS/
 ├── app/
+│   ├── admin/                   # Local Flask Admin Dashboard & management
+│   │   ├── static/              # Local CSS & JavaScript assets
+│   │   ├── templates/           # Server-rendered HTML dashboard templates
+│   │   ├── auth.py              # Authentication, scrypt hashing & sessions
+│   │   ├── routes.py            # HTTP & REST controller routes
+│   │   ├── server.py            # Application factory & local WSGI runner
+│   │   ├── services.py          # Repositories for contacts, web/sys commands
+│   │   └── validators.py        # Input & security parameter validators
 │   ├── core/
 │   │   └── text_utils.py        # Text processing utilities
 │   ├── database/

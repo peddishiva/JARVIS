@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Overview — JARVIS Admin{% endblock %}
+{% block page_title %}System Overview{% endblock %}
+
+{% block content %}
+<div class="grid-cards">
+  <div class="metric-card">
+    <span class="metric-label">Contacts</span>
+    <span class="metric-value">{{ summary.contacts_count }}</span>
+    <span style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">WhatsApp address book</span>
+  </div>
+
+  <div class="metric-card">
+    <span class="metric-label">Web Commands</span>
+    <span class="metric-value">{{ summary.web_commands_count }}</span>
+    <span style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Voice web shortcuts</span>
+  </div>
+
+  <div class="metric-card">
+    <span class="metric-label">System Commands</span>
+    <span class="metric-value">{{ summary.sys_commands_count }}</span>
+    <span style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Registered desktop apps</span>
+  </div>
+
+  <div class="metric-card">
+    <span class="metric-label">AI Status (OpenRouter)</span>
+    <div>
+      {% if summary.openrouter_configured %}
+        <span class="metric-badge badge-success">API Key Configured</span>
+      {% else %}
+        <span class="metric-badge badge-warning">Not Configured (.env)</span>
+      {% endif %}
+    </div>
+    <span style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">LLM Service Connection</span>
+  </div>
+</div>
+
+<div class="table-container" style="padding: 24px; margin-bottom: 24px;">
+  <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--accent-cyan);">Runtime & Environment Details</h3>
+  <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+    <tr style="border-bottom: 1px solid var(--border-color);">
+      <td style="padding: 10px 0; color: var(--text-muted); width: 220px;">Database File</td>
+      <td style="padding: 10px 0;"><strong>{{ summary.database_name }}</strong></td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-color);">
+      <td style="padding: 10px 0; color: var(--text-muted);">Database Connection State</td>
+      <td style="padding: 10px 0;"><span style="color: var(--accent-green);">●</span> {{ summary.database_status }}</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-color);">
+      <td style="padding: 10px 0; color: var(--text-muted);">Security Posture</td>
+      <td style="padding: 10px 0;">Localhost only (127.0.0.1) &mdash; Authenticated Sessions</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px 0; color: var(--text-muted);">Active Administrators</td>
+      <td style="padding: 10px 0;">{{ summary.admin_users_count }}</td>
+    </tr>
+  </table>
+</div>
+
+<div style="display: flex; gap: 16px;">
+  <a href="{{ url_for('admin.contacts') }}" class="btn btn-primary">Manage Contacts</a>
+  <a href="{{ url_for('admin.web_commands') }}" class="btn btn-secondary">Manage Web Commands</a>
+  <a href="{{ url_for('admin.system_commands') }}" class="btn btn-secondary">Manage System Commands</a>
+</div>
+{% endblock %}

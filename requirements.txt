@@ -8,3 +8,5 @@ pywhatkit
 pyautogui
 pygame
 pvporcupine==1.9.5
+flask>=3.0.0
+werkzeug>=3.0.0
