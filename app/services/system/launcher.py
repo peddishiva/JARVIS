@@ -1,4 +1,5 @@
 import os
+import re
 import webbrowser
 
 from app.config import ASSISTANT_NAME
@@ -17,7 +18,7 @@ def open_command(query, speak_fn=None, db_path=None):
         try:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT path FROM sys_command WHERE name IN (?)", (app_name,)
+                "SELECT path FROM sys_command WHERE LOWER(name) = ?", (app_name.lower(),)
             )
             results = cursor.fetchall()
 
@@ -28,7 +29,7 @@ def open_command(query, speak_fn=None, db_path=None):
 
             elif len(results) == 0:
                 cursor.execute(
-                    "SELECT url FROM web_command WHERE name IN (?)", (app_name,)
+                    "SELECT url FROM web_command WHERE LOWER(name) = ?", (app_name.lower(),)
                 )
                 results = cursor.fetchall()
 
@@ -38,10 +39,21 @@ def open_command(query, speak_fn=None, db_path=None):
                     webbrowser.open(results[0][0])
 
                 else:
-                    if speak_fn:
-                        speak_fn("Opening " + query)
+                    # Sanitize: reject shell metacharacters and control sequences
+                    if re.search(r"[;&|><`$\r\n]", app_name):
+                        if speak_fn:
+                            speak_fn("not found")
+                        return
+
+                    # Use safe Windows ShellExecute without invoking a command shell
                     try:
-                        os.system("start " + query)
+                        if hasattr(os, "startfile"):
+                            os.startfile(app_name)
+                            if speak_fn:
+                                speak_fn("Opening " + query)
+                        else:
+                            if speak_fn:
+                                speak_fn("not found")
                     except Exception:
                         if speak_fn:
                             speak_fn("not found")

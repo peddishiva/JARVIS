@@ -1,5 +1,4 @@
 import os
-import sqlite3
 import struct
 import time
 
@@ -9,7 +8,7 @@ import pvporcupine
 import pygame
 import pywhatkit as kit
 
-from app.database import DEFAULT_DB_PATH, init_db
+from app.database import init_db
 from app.services.llm import (
     OPENROUTER_API_KEY,
     OPENROUTER_MODEL,
@@ -28,9 +27,18 @@ SOUND_PATH = os.path.join(BASE_DIR, "www", "assets", "audio", "start_sound.mp3")
 
 openrouter_client = get_openrouter_client()
 
-init_db()
-conn = sqlite3.connect(DEFAULT_DB_PATH)
-cursor = conn.cursor()
+
+def __getattr__(name):
+    """Lazy compatibility lookup for legacy module attributes."""
+    if name == "conn":
+        from app.database import get_connection
+
+        return get_connection()
+    if name == "cursor":
+        from app.database import get_connection
+
+        return get_connection().cursor()
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 
 @eel.expose
@@ -82,12 +90,23 @@ def hotword():
                 autogui.keyUp("win")
 
     except Exception:
+        pass
+    finally:
         if porcupine is not None:
-            porcupine.delete()
+            try:
+                porcupine.delete()
+            except Exception:
+                pass
         if audio_stream is not None:
-            audio_stream.close()
+            try:
+                audio_stream.close()
+            except Exception:
+                pass
         if paud is not None:
-            paud.terminate()
+            try:
+                paud.terminate()
+            except Exception:
+                pass
 
 
 def findContact(query):

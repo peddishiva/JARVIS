@@ -1,3 +1,4 @@
+import os
 import subprocess
 import time
 from urllib.parse import quote
@@ -63,15 +64,29 @@ def send_whatsapp_message(mobile_no, message, flag, name, speak_fn=None):
 
     encoded_message = quote(message)
     whatsapp_url = f"whatsapp://send?phone={mobile_no}&text={encoded_message}"
-    full_command = f'start "" "{whatsapp_url}"'
 
-    subprocess.run(full_command, shell=True)
-    time.sleep(5)
-    subprocess.run(full_command, shell=True)
+    # Use safe Windows ShellExecute or argument-list subprocess without shell=True
+    if hasattr(os, "startfile"):
+        try:
+            os.startfile(whatsapp_url)
+            time.sleep(5)
+            os.startfile(whatsapp_url)
+        except Exception:
+            subprocess.run(["cmd", "/c", "start", "", whatsapp_url], check=False)
+            time.sleep(5)
+            subprocess.run(["cmd", "/c", "start", "", whatsapp_url], check=False)
+    else:
+        subprocess.run(["cmd", "/c", "start", "", whatsapp_url], check=False)
+        time.sleep(5)
+        subprocess.run(["cmd", "/c", "start", "", whatsapp_url], check=False)
 
-    pyautogui.hotkey("ctrl", "f")
-    for _ in range(1, target_tab):
-        pyautogui.hotkey("tab")
-    pyautogui.hotkey("enter")
+    try:
+        pyautogui.hotkey("ctrl", "f")
+        for _ in range(1, target_tab):
+            pyautogui.hotkey("tab")
+        pyautogui.hotkey("enter")
+    except Exception as e:
+        print(f"WhatsApp GUI navigation warning: {e}")
+
     if speak_fn:
         speak_fn(jarvis_message)

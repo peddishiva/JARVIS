@@ -30,6 +30,7 @@ if __name__ == '__main__':
 
     p1 = multiprocessing.Process(target=startJarvis)
     p2 = multiprocessing.Process(target=listenHotword)
+    p2.daemon = True
     p1.start()
     p2.start()
 
@@ -40,8 +41,12 @@ if __name__ == '__main__':
     finally:
         if p2.is_alive():
             p2.terminate()
-            p2.join()
+            p2.join(timeout=2)
+            if p2.is_alive():
+                p2.kill()
         if p1.is_alive():
             p1.terminate()
-            p1.join()
+            p1.join(timeout=2)
+            if p1.is_alive():
+                p1.kill()
         print("system stop")

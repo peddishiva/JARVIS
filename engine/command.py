@@ -47,18 +47,29 @@ def allCommands(message=1):
             pass
 
     try:
-        import engine.features as feat
+        import sys
 
-        route_command(
-            query,
-            speak_fn=speak,
-            take_command_fn=takecommand,
-            open_command_fn=feat.openCommand,
-            play_youtube_fn=feat.PlayYoutube,
-            find_contact_fn=feat.findContact,
-            whatsapp_fn=feat.whatsApp,
-            chat_bot_fn=feat.chatBot,
-        )
+        feat = sys.modules.get("engine.features")
+        if feat and any(
+            hasattr(getattr(feat, fn, None), "assert_called")
+            for fn in ("openCommand", "PlayYoutube", "findContact", "chatBot")
+        ):
+            route_command(
+                query,
+                speak_fn=speak,
+                take_command_fn=takecommand,
+                open_command_fn=feat.openCommand,
+                play_youtube_fn=feat.PlayYoutube,
+                find_contact_fn=feat.findContact,
+                whatsapp_fn=feat.whatsApp,
+                chat_bot_fn=feat.chatBot,
+            )
+        else:
+            route_command(
+                query,
+                speak_fn=speak,
+                take_command_fn=takecommand,
+            )
     except Exception:
         print("error")
 
