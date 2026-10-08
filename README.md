@@ -7,7 +7,7 @@ A Windows-first Python desktop voice assistant with a local Eel web UI. JARVIS c
 - Voice input using `SpeechRecognition` and the system microphone.
 - Voice output using `pyttsx3` with Windows SAPI5.
 - Wake-word detection for **JARVIS** / **Alexa** using Picovoice Porcupine.
-- Desktop UI built with **Eel** and the files under `www/`.
+- Desktop UI built with **Eel** and frontend assets under `www/`.
 - Opens Windows applications and registered web commands from SQLite.
 - Plays YouTube searches through `pywhatkit`.
 - Sends WhatsApp messages and starts WhatsApp calls/video calls through Windows URL and keyboard automation.
@@ -16,12 +16,12 @@ A Windows-first Python desktop voice assistant with a local Eel web UI. JARVIS c
 
 ## Requirements
 
-JARVIS is currently designed for **Windows**. The application starts Microsoft Edge in app mode and uses Windows-specific functionality such as SAPI5 and `os.startfile`.
+JARVIS is designed for **Windows**. The application starts Microsoft Edge in app mode and uses Windows-specific functionality such as SAPI5 and `os.startfile`.
 
 You need:
 
 - Windows 10 or Windows 11
-- Python 3.10+ (Python 3.12 is a reasonable choice for this repository)
+- Python 3.10+ (Python 3.12 or 3.13)
 - A working microphone
 - Speakers or headphones
 - Microsoft Edge
@@ -77,17 +77,24 @@ JARVIS uses OpenRouter's OpenAI-compatible API endpoint. The API key stays in `.
 
 `openrouter/free` is used as the default model router. You can replace it with another OpenRouter model ID whenever you want without changing the Python code.
 
-### 5. Prepare the local database
+### 5. Local Database Setup
 
-JARVIS expects a local SQLite database named `jarvis.db` in the project root. It is intentionally ignored by Git because it can contain personal contacts and machine-specific application paths.
+JARVIS uses a local SQLite database named `jarvis.db` in the project root. It is intentionally ignored by Git because it contains local user data, personal contacts, and machine-specific application paths.
 
-The database helper in `engine/db.py` contains example SQL for these tables:
+Database initialization is managed authoritatively by `app.database`:
+- Schema initialization and default seeding run automatically on application startup.
+- You can also run initialization manually via PowerShell:
 
-- `sys_command` — application names and Windows executable paths.
-- `web_command` — command names and web URLs.
+```powershell
+python -c "from app.database import init_db; init_db()"
+```
+
+The database schema defines three tables:
+- `sys_command` — application shortcuts and Windows executable paths.
+- `web_command` — command names and web URLs (pre-seeded with popular defaults).
 - `contacts` — contact names and mobile numbers used by WhatsApp automation.
 
-If you already have a working `jarvis.db`, place it in the project root. Otherwise initialize the required tables using the examples in `engine/db.py` before using database-backed commands.
+Users should populate their own local database with personal contacts and installed application paths.
 
 ### 6. Start JARVIS
 
@@ -105,74 +112,99 @@ python main.py
 
 The UI launcher initializes `www/`, plays the startup sound, and opens Microsoft Edge at the local JARVIS page.
 
-## How It Works
+## Architecture
+
+JARVIS follows a modular 4.x architecture where `app/` is the authoritative implementation layer and `engine/` acts as a compatibility and runtime bridge.
 
 ```text
-Microphone
-    │
-    ▼
-Porcupine Hotword Listener
-    │
-    └── "Jarvis" / "Alexa"
+       www/ (Eel Frontend)
              │
              ▼
-          Win + J
+     engine.command (Eel Bridge)
              │
              ▼
-       Eel Web Interface
+        app.routing (Command Dispatcher)
              │
              ▼
-      Speech Recognition
-             │
-             ▼
-       Command Router
-       ┌─────┼──────────────┬─────────────┐
-       ▼     ▼              ▼             ▼
-     System  Web          YouTube      WhatsApp
-     Apps    Commands      Search       Actions
-       │     │              │             │
-       └─────┴──────────────┴─────────────┘
-                         │
-                         ▼
-                 OpenRouter API
-                         │
-                         ▼
-                  Configured LLM
-                         │
-                         ▼
-                    pyttsx3/SAPI5
+        app.services (Business Logic)
+  ┌──────────┼──────────────┬─────────────┐
+  ▼          ▼              ▼             ▼
+System     Web           YouTube       WhatsApp
+Apps       Commands       Search        Actions
+  │          │              │             │
+  └──────────┴──────────────┴─────────────┘
+                    │
+                    ▼
+           OpenRouter Service
+         (app.services.llm)
+                    │
+                    ▼
+              Configured LLM
+                    │
+                    ▼
+          app.speech (TTS/STT)
 ```
 
-Normal conversational requests are routed to `chatBot()`, which sends the request to the configured OpenRouter model and then speaks the returned response.
+Core Layer Responsibilities:
+- `app.config`: Authoritative configuration constants (`ASSISTANT_NAME`).
+- `app.database`: Authoritative connection management, schema definitions, and idempotent seed routines.
+- `app.routing`: Authoritative command intent classification and routing.
+- `app.speech`: Authoritative speech recognition and text-to-speech engines.
+- `app.services`: Independent domain services (LLM, system launcher, WhatsApp, YouTube).
+- `engine/`: Compatibility wrappers and re-exports preserving public signatures and Eel interface contracts.
+- `www/`: Static frontend assets (HTML, CSS, JavaScript) served via Eel.
+- `run.py`: Two-process entrypoint orchestrating the Eel UI and the background Porcupine hotword listener.
 
 ## Project Structure
 
 ```text
 JARVIS/
+├── app/
+│   ├── core/
+│   │   └── text_utils.py        # Text processing utilities
+│   ├── database/
+│   │   ├── connection.py        # Connection lifecycle management
+│   │   ├── schema.py            # SQLite schema definitions
+│   │   └── seed.py              # Default web command seed data
+│   ├── routing/
+│   │   └── router.py            # Central intent and command routing
+│   ├── services/
+│   │   ├── llm/
+│   │   │   └── openrouter.py    # Authoritative OpenRouter API service
+│   │   ├── system/
+│   │   │   └── launcher.py      # System app and URL launcher
+│   │   ├── whatsapp/
+│   │   │   └── automation.py    # WhatsApp messaging and call automation
+│   │   └── youtube/
+│   │       └── player.py        # YouTube search and playback service
+│   ├── speech/
+│   │   ├── recognition.py       # Speech-to-text recognition
+│   │   └── synthesis.py         # Text-to-speech audio synthesis
+│   └── config.py                # Authoritative application configuration
 ├── engine/
-│   ├── command.py       # Speech recognition and command routing
-│   ├── config.py        # Assistant name
-│   ├── db.py            # SQLite schema/data helper code
-│   ├── features.py      # Assistant features and OpenRouter LLM integration
-│   └── helper.py        # Text/YouTube helpers
+│   ├── command.py               # Eel bridge and legacy command interface
+│   ├── config.py                # Legacy config compatibility re-exports
+│   ├── db.py                    # Legacy database compatibility re-exports
+│   ├── features.py              # Legacy feature bridges and hotword listener
+│   └── helper.py                # Legacy helper compatibility re-exports
 ├── www/
-│   ├── assets/          # Audio, icon and vendor assets
-│   ├── controller.js
-│   ├── index.html       # Eel UI entry page
-│   ├── main.js
-│   ├── script.js
-│   └── style.css
-├── .env.example         # OpenRouter configuration template
+│   ├── assets/                  # Audio, icons, and vendor assets
+│   ├── controller.js            # Frontend Eel controller
+│   ├── index.html               # Main user interface page
+│   ├── main.js                  # Frontend audio and UI interaction logic
+│   ├── script.js                # Frontend animations and visual effects
+│   └── style.css                # Interface styling
+├── .env.example                 # Environment configuration template
 ├── .gitignore
-├── main.py              # Starts the Eel application
-├── run.py               # Starts UI + hotword listener
-├── requirements.txt     # Python dependencies
+├── main.py                      # Starts the Eel application process
+├── run.py                       # Starts UI and hotword processes
+├── requirements.txt             # Python dependencies
 └── README.md
 ```
 
 ## OpenRouter Configuration
 
-The LLM integration is intentionally isolated to `chatBot()` in `engine/features.py`.
+The authoritative LLM implementation resides in `app/services/llm/openrouter.py`. `engine/features.py` exposes a compatibility wrapper (`chatBot()`) that delegates directly to this service.
 
 Environment variables:
 
