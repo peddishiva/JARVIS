@@ -39,6 +39,7 @@
             Edit
           </button>
           <form method="POST" action="{{ url_for('admin.delete_contact', contact_id=contact.id) }}" class="delete-form" data-entity-name="contact '{{ contact.name }}'">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-danger btn-sm">
               Delete
             </button>
@@ -54,6 +55,7 @@
             <button class="modal-close" data-close-modal>&times;</button>
           </div>
           <form method="POST" action="{{ url_for('admin.update_contact', contact_id=contact.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
               <label class="form-label">Full Name</label>
               <input type="text" name="name" class="form-control" value="{{ contact.name }}" required maxlength="100">
@@ -96,6 +98,7 @@
       <button class="modal-close" data-close-modal>&times;</button>
     </div>
     <form method="POST" action="{{ url_for('admin.create_contact') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
         <label class="form-label">Full Name</label>
         <input type="text" name="name" class="form-control" required maxlength="100" placeholder="e.g. Shiva">

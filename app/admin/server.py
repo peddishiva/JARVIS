@@ -27,6 +27,13 @@ def create_app(secret_key=None, test_config=None):
     if test_config:
         app.config.update(test_config)
 
+    # Context processor to expose csrf_token() in all templates
+    from app.admin.csrf import generate_csrf_token
+
+    @app.context_processor
+    def inject_csrf_token():
+        return dict(csrf_token=generate_csrf_token)
+
     # Register Admin Blueprint
     app.register_blueprint(admin_bp, url_prefix="/admin")
 

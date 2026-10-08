@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}JARVIS Admin Dashboard{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('admin.static', filename='admin.css') }}">
 </head>
@@ -40,9 +41,12 @@
         <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
           Logged in as <strong>{{ session.admin_username }}</strong>
         </div>
-        <a href="{{ url_for('admin.logout') }}" class="btn btn-secondary btn-sm" style="width: 100%;">
-          Logout
-        </a>
+        <form method="POST" action="{{ url_for('admin.logout') }}" style="margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">
+            Logout
+          </button>
+        </form>
       </div>
     </aside>
 

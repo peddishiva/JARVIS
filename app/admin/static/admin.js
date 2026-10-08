@@ -41,3 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+// Expose CSRF token helper for client scripts or fetch requests
+window.getCSRFToken = function () {
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  return meta ? meta.getAttribute("content") : "";
+};

@@ -37,6 +37,7 @@
             Edit
           </button>
           <form method="POST" action="{{ url_for('admin.delete_web_command', cmd_id=cmd.id) }}" class="delete-form" data-entity-name="command '{{ cmd.name }}'">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-danger btn-sm">
               Delete
             </button>
@@ -52,6 +53,7 @@
             <button class="modal-close" data-close-modal>&times;</button>
           </div>
           <form method="POST" action="{{ url_for('admin.update_web_command', cmd_id=cmd.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
               <label class="form-label">Command Keyword (Voice Trigger)</label>
               <input type="text" name="name" class="form-control" value="{{ cmd.name }}" required maxlength="100">
@@ -91,6 +93,7 @@
       <button class="modal-close" data-close-modal>&times;</button>
     </div>
     <form method="POST" action="{{ url_for('admin.create_web_command') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
         <label class="form-label">Command Keyword (Voice Trigger)</label>
         <input type="text" name="name" class="form-control" required maxlength="100" placeholder="e.g. github">

@@ -1,5 +1,4 @@
-"""HTTP and REST controller routes for the JARVIS Admin Dashboard."""
-
+from urllib.parse import urlsplit
 from flask import (
     Blueprint,
     render_template,
@@ -10,6 +9,7 @@ from flask import (
     session,
     jsonify,
 )
+from app.admin.csrf import verify_csrf, generate_csrf_token
 from app.admin.auth import (
     admin_exists,
     create_admin_user,
@@ -24,6 +24,30 @@ from app.admin.services import (
 )
 
 admin_bp = Blueprint("admin", __name__, template_folder="templates", static_folder="static")
+
+
+@admin_bp.before_request
+def enforce_csrf_protection():
+    """Verify CSRF token on all mutating requests across the admin blueprint."""
+    return verify_csrf()
+
+
+def is_safe_redirect_url(target):
+    """Validate that a redirect target is a safe local relative path."""
+    if not target:
+        return False
+    target = str(target).strip()
+    if target.startswith(("//", "\\\\", "/\\", "\\/")):
+        return False
+    if not target.startswith("/"):
+        return False
+    try:
+        parts = urlsplit(target)
+        if parts.netloc or parts.scheme:
+            return False
+        return True
+    except Exception:
+        return False
 
 
 @admin_bp.route("/")
@@ -69,7 +93,7 @@ def setup():
 
 @admin_bp.route("/login", methods=["GET", "POST"])
 def login():
-    """Admin login."""
+    """Admin login with safe local redirect validation."""
     if not admin_exists():
         return redirect(url_for("admin.setup"))
 
@@ -85,8 +109,10 @@ def login():
             session.clear()
             session["admin_id"] = user["id"]
             session["admin_username"] = user["username"]
+            generate_csrf_token()  # Establish fresh session CSRF token
             flash(f"Welcome back, {user['username']}.", "success")
-            next_url = request.args.get("next") or url_for("admin.dashboard")
+            raw_next = request.args.get("next")
+            next_url = raw_next if is_safe_redirect_url(raw_next) else url_for("admin.dashboard")
             return redirect(next_url)
         else:
             flash("Invalid username or password.", "error")
@@ -95,9 +121,9 @@ def login():
     return render_template("login.html")
 
 
-@admin_bp.route("/logout", methods=["GET", "POST"])
+@admin_bp.route("/logout", methods=["POST"])
 def logout():
-    """Logout current admin session."""
+    """Logout current admin session (POST only, CSRF protected)."""
     session.clear()
     flash("You have been logged out.", "info")
     return redirect(url_for("admin.login"))

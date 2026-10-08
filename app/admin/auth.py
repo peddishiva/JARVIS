@@ -121,7 +121,7 @@ def get_admin_by_id(admin_id, db_path=None):
 
 
 def login_required(f):
-    """Decorator to protect administrative views against unauthenticated access."""
+    """Decorator to protect administrative views against unauthenticated access and inactive accounts."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # First check if system has any admin accounts configured
@@ -134,6 +134,14 @@ def login_required(f):
         if not admin_id:
             if request.is_json or request.path.startswith("/admin/api/"):
                 return jsonify({"error": "Authentication required"}), 401
+            return redirect(url_for("admin.login", next=request.path))
+
+        # Revalidate that the admin account still exists and remains active in SQLite
+        admin_user = get_admin_by_id(admin_id)
+        if not admin_user or not admin_user.get("is_active"):
+            session.clear()
+            if request.is_json or request.path.startswith("/admin/api/"):
+                return jsonify({"error": "Authentication required or account deactivated"}), 401
             return redirect(url_for("admin.login", next=request.path))
 
         return f(*args, **kwargs)
