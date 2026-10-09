@@ -7,6 +7,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const modal = document.getElementById(modalId);
       if (modal) {
         modal.classList.add("active");
+        const firstInput = modal.querySelector("input:not([type='hidden']), textarea, select");
+        if (firstInput) {
+          setTimeout(() => firstInput.focus(), 60);
+        }
       }
     });
   });
@@ -21,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Close modal when clicking outside modal content
+  // Close modal when clicking on backdrop
   document.querySelectorAll(".modal").forEach((modal) => {
     modal.addEventListener("click", (e) => {
       if (e.target === modal) {
@@ -30,11 +34,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // Keyboard Escape to close any active modal
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const activeModal = document.querySelector(".modal.active");
+      if (activeModal) {
+        activeModal.classList.remove("active");
+      }
+    }
+  });
+
   // Form delete confirmation
   document.querySelectorAll("form.delete-form").forEach((form) => {
     form.addEventListener("submit", (e) => {
-      const entityName = form.getAttribute("data-entity-name") || "this item";
-      const confirmed = window.confirm(`Are you sure you want to delete ${entityName}? This action cannot be undone.`);
+      const entityName = form.getAttribute("data-entity-name") || "this record";
+      const confirmed = window.confirm(`Permanently delete ${entityName}?\nThis action cannot be undone.`);
       if (!confirmed) {
         e.preventDefault();
       }

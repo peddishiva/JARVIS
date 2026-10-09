@@ -18,7 +18,7 @@ import glob
 import shutil
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 # Ensure project root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -461,6 +461,58 @@ class TestPhase5Admin(unittest.TestCase):
                 self.assertNotIn("from engine", content, f"Forbidden engine import in {pyfile}")
                 if "app/admin" in pyfile.replace("\\", "/"):
                     self.assertNotIn("shell=True", content, f"Forbidden shell=True in {pyfile}")
+
+    # ============================================================
+    # 10. ADMIN DASHBOARD LAUNCHER & AVAILABILITY AUDIT
+    # ============================================================
+
+    def test_open_admin_dashboard_when_server_running(self):
+        """Verify open_admin_dashboard invokes browser with exact admin URL when server is active."""
+        from app.config import ADMIN_HOST, ADMIN_PORT
+        from app.admin import open_admin_dashboard
+
+        expected_url = f"http://{ADMIN_HOST}:{ADMIN_PORT}/admin"
+        mock_browser = MagicMock()
+
+        with patch("app.admin.server.is_admin_server_running", return_value=True):
+            res = open_admin_dashboard(browser_fn=mock_browser)
+            self.assertEqual(res["status"], "success")
+            self.assertEqual(res["url"], expected_url)
+            mock_browser.assert_called_once_with(expected_url)
+
+    def test_open_admin_dashboard_when_server_unavailable(self):
+        """Verify open_admin_dashboard returns non-blocking error and does not open browser when down."""
+        from app.config import ADMIN_HOST, ADMIN_PORT
+        from app.admin import open_admin_dashboard
+
+        mock_browser = MagicMock()
+
+        with patch("app.admin.server.is_admin_server_running", return_value=False):
+            res = open_admin_dashboard(browser_fn=mock_browser)
+            self.assertEqual(res["status"], "error")
+            self.assertIn("Admin Dashboard is not running", res["message"])
+            self.assertIn(f"http://{ADMIN_HOST}:{ADMIN_PORT}/admin", res["message"])
+            mock_browser.assert_not_called()
+
+    def test_open_admin_dashboard_browser_exception(self):
+        """Verify graceful error handling if browser launcher throws an exception."""
+        from app.admin import open_admin_dashboard
+
+        mock_browser = MagicMock(side_effect=RuntimeError("Browser launch failed"))
+
+        with patch("app.admin.server.is_admin_server_running", return_value=True):
+            res = open_admin_dashboard(browser_fn=mock_browser)
+            self.assertEqual(res["status"], "error")
+            self.assertIn("Could not launch browser", res["message"])
+
+    def test_eel_exposed_open_admin_dashboard_delegation(self):
+        """Verify engine.features.openAdminDashboard correctly delegates to open_admin_dashboard."""
+        from engine.features import openAdminDashboard
+
+        with patch("app.admin.open_admin_dashboard", return_value={"status": "success", "url": "http://127.0.0.1:5005/admin"}) as mock_launcher:
+            res = openAdminDashboard()
+            self.assertEqual(res["status"], "success")
+            mock_launcher.assert_called_once()
 
 
 if __name__ == "__main__":

@@ -2,6 +2,8 @@
 
 import os
 import secrets
+import socket
+import webbrowser
 from datetime import timedelta
 from flask import Flask, redirect, url_for
 from app.config import ADMIN_HOST, ADMIN_PORT, ADMIN_SECRET_KEY
@@ -51,6 +53,37 @@ def run_admin_server(host=None, port=None):
     app = create_app()
     print(f"JARVIS Admin Dashboard running locally on http://{host}:{port}/admin")
     app.run(host=host, port=port, debug=False, use_reloader=False)
+
+
+def is_admin_server_running(host=None, port=None, timeout=0.6):
+    """Check if the Admin Dashboard HTTP server is currently listening."""
+    host = host or ADMIN_HOST or "127.0.0.1"
+    port = port or ADMIN_PORT or 5005
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except (OSError, ConnectionRefusedError):
+        return False
+
+
+def open_admin_dashboard(browser_fn=None):
+    """Open the Admin Dashboard in the default browser if the server is running."""
+    browser = browser_fn or webbrowser.open
+    host = ADMIN_HOST or "127.0.0.1"
+    port = ADMIN_PORT or 5005
+    admin_url = f"http://{host}:{port}/admin"
+
+    if is_admin_server_running(host, port):
+        try:
+            browser(admin_url)
+            return {"status": "success", "url": admin_url}
+        except Exception as err:
+            return {"status": "error", "message": f"Could not launch browser: {err}"}
+
+    return {
+        "status": "error",
+        "message": f"Admin Dashboard is not running on {admin_url}. Start it via run.py or 'python -m app.admin'."
+    }
 
 
 if __name__ == "__main__":

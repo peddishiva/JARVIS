@@ -5,58 +5,112 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}JARVIS Admin Dashboard{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('admin.static', filename='admin.css') }}">
 </head>
 <body>
   {% if session.admin_id %}
   <div class="layout">
-    <!-- Sidebar -->
+    <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <span>⚡ JARVIS Admin</span>
+        <div class="brand-emblem" aria-hidden="true"></div>
+        <div class="brand-text-group">
+          <span class="brand-title">JARVIS</span>
+          <span class="brand-badge">Admin</span>
+        </div>
       </div>
+
       <ul class="sidebar-nav">
         <li>
           <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
-            📊 Dashboard
+            <span class="nav-icon" aria-hidden="true">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </span>
+            <span>Dashboard</span>
           </a>
         </li>
         <li>
           <a href="{{ url_for('admin.contacts') }}" class="nav-link {% if request.endpoint == 'admin.contacts' %}active{% endif %}">
-            👥 Contacts
+            <span class="nav-icon" aria-hidden="true">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </span>
+            <span>Contacts</span>
           </a>
         </li>
         <li>
           <a href="{{ url_for('admin.web_commands') }}" class="nav-link {% if request.endpoint == 'admin.web_commands' %}active{% endif %}">
-            🌐 Web Commands
+            <span class="nav-icon" aria-hidden="true">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+            </span>
+            <span>Web Commands</span>
           </a>
         </li>
         <li>
           <a href="{{ url_for('admin.system_commands') }}" class="nav-link {% if request.endpoint == 'admin.system_commands' %}active{% endif %}">
-            💻 System Commands
+            <span class="nav-icon" aria-hidden="true">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </span>
+            <span>System Commands</span>
           </a>
         </li>
       </ul>
+
       <div class="sidebar-footer">
-        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
-          Logged in as <strong>{{ session.admin_username }}</strong>
+        <div class="user-status-card">
+          <div class="user-avatar-initials" aria-hidden="true">
+            {{ (session.admin_username or 'A')[0] | upper }}
+          </div>
+          <div class="user-info">
+            <span class="user-name" title="{{ session.admin_username }}">{{ session.admin_username }}</span>
+            <span class="user-role">Administrator</span>
+          </div>
         </div>
         <form method="POST" action="{{ url_for('admin.logout') }}" style="margin: 0;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">
-            Logout
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Sign Out</span>
           </button>
         </form>
       </div>
     </aside>
 
-    <!-- Main Content -->
+    <!-- Main Content Area -->
     <div class="main-content">
       <header class="top-bar">
-        <h2 class="page-title">{% block page_title %}Dashboard{% endblock %}</h2>
+        <div class="top-bar-title-group">
+          <span class="breadcrumb-label">JARVIS Control Panel</span>
+          <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+        </div>
         <div>
-          <span style="font-size: 12px; color: var(--text-muted); background: var(--bg-dark); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color);">
-            🔒 Local Admin (127.0.0.1)
+          <span class="security-badge" title="Access restricted to local machine loopback interface">
+            <span class="security-indicator-dot" aria-hidden="true"></span>
+            <span>Localhost (127.0.0.1)</span>
           </span>
         </div>
       </header>
@@ -66,7 +120,16 @@
           {% if messages %}
             <div class="flash-container">
               {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
+                <div class="alert alert-{{ category }}">
+                  {% if category == 'success' %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  {% elif category in ['error', 'danger'] %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  {% else %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                  {% endif %}
+                  <span>{{ message }}</span>
+                </div>
               {% endfor %}
             </div>
           {% endif %}
@@ -77,17 +140,29 @@
     </div>
   </div>
   {% else %}
+  <!-- Authentication Layout (Login / Setup) -->
   <div class="auth-wrapper">
     <div class="auth-card">
+      <div class="auth-brand-header">
+        <div class="brand-emblem" aria-hidden="true"></div>
+        <div class="brand-text-group">
+          <span class="brand-title">JARVIS</span>
+          <span class="brand-badge">Admin</span>
+        </div>
+      </div>
+
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <div class="flash-container">
             {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">{{ message }}</div>
+              <div class="alert alert-{{ category }}">
+                <span>{{ message }}</span>
+              </div>
             {% endfor %}
           </div>
         {% endif %}
       {% endwith %}
+
       {% block auth_content %}{% endblock %}
     </div>
   </div>

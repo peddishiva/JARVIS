@@ -7,6 +7,8 @@ A Windows-first Python desktop voice assistant with a local Eel web UI. JARVIS c
 - Voice input using `SpeechRecognition` and the system microphone.
 - Voice output using `pyttsx3` with Windows SAPI5.
 - Wake-word detection for **JARVIS** / **Alexa** using Picovoice Porcupine.
+- **ChatGPT-Style Conversation Interface**: Modern conversation stream with user/assistant bubbles, syntax highlighting, and an anchored bottom chat composer with independent message scrolling.
+- **Persistent Chat History & Recent Chats**: Database-backed conversation management in SQLite with automated title generation, conversation switching, renaming, and deletion.
 - Desktop UI built with **Eel** and frontend assets under `www/`.
 - **Admin Dashboard (Phase 5)** built with Flask, providing local administrative control for contacts, web commands, system commands, and authentication.
 - Opens Windows applications and registered web commands from SQLite.
@@ -94,7 +96,9 @@ Database initialization is managed authoritatively by `app.database`:
 python -c "from app.database import init_db; init_db()"
 ```
 
-The database schema defines four tables:
+The database schema defines the following tables:
+- `conversations` — persistent chat conversation threads (`id`, `title`, `created_at`, `updated_at`, `is_archived`).
+- `messages` — ordered conversation messages (`id`, `conversation_id`, `role`, `content`, `created_at`, `sequence_number`).
 - `admin_user` — administrator account credentials (`username`, `password_hash`, `is_active`).
 - `contacts` — contact names and mobile numbers used by WhatsApp automation.
 - `web_command` — command names and web URLs (pre-seeded with popular defaults).
@@ -217,6 +221,7 @@ JARVIS/
 │   ├── routing/
 │   │   └── router.py            # Central intent and command routing
 │   ├── services/
+│   │   ├── chat_history/        # Persistent conversation and message storage
 │   │   ├── llm/
 │   │   │   └── openrouter.py    # Authoritative OpenRouter API service
 │   │   ├── system/
@@ -344,6 +349,7 @@ The current implementation relies on Windows `whatsapp://send?...` links and `py
 ```powershell
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+python -m unittest discover tests
 python run.py
 python main.py
 deactivate

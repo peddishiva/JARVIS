@@ -4,137 +4,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jarvis</title>
+    <title>JARVIS</title>
 
-    <link rel="shortct icon" href="assets/img/Logo.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="assets/img/jarvis-logo.png" type="image/png">
+    <link rel="icon" href="assets/img/jarvis-logo.png" type="image/png">
 
-    <!-- Bootsrap -->
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
-    <!-- Bootsrap icons-->
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <!-- Particle js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"
-        type="text/javascript"></script>
-
-
-    <!-- textlate -->
-    <link rel="stylesheet" href="assets/vendore/texllate/animate.css">
-
+    <!-- Custom Replicated Styles -->
     <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
 
-    <div class="container">
+    <div class="app-viewport">
 
-        <section id="oval" class="mb-4">
-
-            <div class="row">
-                <div class="col-md-1"></div>
-                <div class="col-md-10">
-                    <div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
-
-
-                        <canvas id="canvasOne" width="700" height="420" style="position: absolute;"></canvas>
-
-
-
-                        <div id="JarvisHood">
-
-                            <div class="square">
-                                <span class="circle"></span>
-                                <span class="circle"></span>
-                                <span class="circle"></span>
-                            </div>
-
-                        </div>
-
-                    </div>
-                    <h5 class="text-light text text-center tlt" data-in-effect="fadeIn">Ask me anything</h5>
-
-                    <div class="col-md-12 mt-4 pt-4">
-                        <div class="text-center">
-                            <div id="TextInput" class="d-flex">
-                                <input type="text" class="input-field" name="chatbot" id="chatbot"
-                                    placeholder="type here...">
-                                <button id="SendBtn" class="glow-on-hover" hidden><i class="bi bi-send"></i></button>
-                                <button id="MicBtn" class="glow-on-hover"><i class="bi bi-mic"></i></button>
-                                <button id="ChatBtn" class="glow-on-hover" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling"><i class="bi bi-chat-dots"></i></button>
-                                <button id="SettingsBtn" class="glow-on-hover"><i class="bi bi-gear"></i></button>
-
-                            </div>
-                            <div class="col-md-1"></div>
-
-                        </div>
-
-        </section>
-
-        <section id="siriwave" class="mb-4" hidden>
-
-            <div class="container">
-                <div class="row">
-                    <div class="col-mb-12">
-                        <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
-
-                            <div class="">
-
-                                <p class="text-start text-light mb-4 siri-message">Hey Shiva, This is Jarvis </p>
-                                <div id="siri-container"></div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
+        <!-- Top Navigation -->
+        <header class="top-nav">
+            <div class="brand-container">
+                <span class="brand-emblem" aria-hidden="true"></span>
+                <span class="brand-name">JARVIS</span>
             </div>
 
-    </div>
+            <div class="nav-right">
+                <div class="nav-actions">
+                    <button type="button" class="action-new-chat" id="newChatBtn" title="Start New Chat" style="display: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>New Chat</span>
+                    </button>
 
-    </section>
+                    <button type="button" class="action-history-nav" id="navHistoryBtn" data-bs-toggle="offcanvas"
+                        data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling" title="Recent Conversations">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </button>
 
-    </div>
-    <div class="offcanvas offcanvas-start chat-canvas" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1"
-        id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title text-white" id="offcanvasScrollingLabel">Chats</h5>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    <button type="button" class="action-lightbulb" id="lightbulbBtn" title="Ambient illumination toggle">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7zM9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1z"/>
+                        </svg>
+                    </button>
+
+                    <button type="button" class="profile-avatar" id="profileAvatar" title="Open Admin Dashboard" aria-label="Open Admin Dashboard">
+                        <img src="assets/img/avatar.jpg" alt="User Profile" onerror="this.src='assets/img/jarvis-logo.png'">
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Screen Section (#oval matches legacy Eel ShowHood contract) -->
+        <main id="oval" class="main-content">
+
+            <!-- Hero Section (Visible in idle home state) -->
+            <section class="hero-section" id="heroSection">
+                <div class="brain-badge" aria-hidden="true">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Left Hemisphere Lobes -->
+                        <path d="M14.5 5.5C12 5.5 10 7 9.5 9.2C7.5 9.8 6 11.8 6 14.2C6 15.4 6.5 16.5 7.2 17.4C6.4 18.3 6 19.5 6.2 20.8C6.6 22.8 8.2 24.5 10.2 25C11.5 25.8 13 26.2 14.5 26.2" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round"/>
+                        <!-- Right Hemisphere Lobes -->
+                        <path d="M17.5 5.5C20 5.5 22 7 22.5 9.2C24.5 9.8 26 11.8 26 14.2C26 15.4 25.5 16.5 24.8 17.4C25.6 18.3 26 19.5 25.8 20.8C25.4 22.8 23.8 24.5 21.8 25C20.5 25.8 19 26.2 17.5 26.2" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round"/>
+                        <!-- Central Suture -->
+                        <path d="M16 6V25.5" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                        <!-- Left Convolutions -->
+                        <path d="M9.5 10.5C11.2 11.2 12.8 10.8 14.5 12" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M8 15C10 15 11.5 13.5 13.5 15C11.5 16.5 9.5 16.5 8.5 18" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M10 21C11.5 21 12.8 19.5 14.5 20.5" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                        <!-- Right Convolutions -->
+                        <path d="M22.5 10.5C20.8 11.2 19.2 10.8 17.5 12" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M24 15C22 15 20.5 13.5 18.5 15C20.5 16.5 22.5 16.5 23.5 18" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M22 21C20.5 21 19.2 19.5 17.5 20.5" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+
+                <h2 class="hero-subtitle">Welcome Back <span class="sparkle-emoji">&#x2728;</span></h2>
+                <h1 class="hero-title">What Can I Help You Create Today?</h1>
+            </section>
+
+            <!-- Classic ChatGPT Conversation Stream (Visible when conversation is active) -->
+            <section id="conversationView" class="conversation-container" style="display: none;" aria-live="polite">
+                <div id="chatMessages" class="chat-messages-column">
+                    <!-- Dynamic user queries and assistant responses inserted here -->
+                </div>
+            </section>
+
+            <!-- Compact Voice Status / SiriWave Indicator Dock (Non-blocking) -->
+            <section id="siriwave" class="siri-dock" hidden>
+                <div class="siri-dock-inner">
+                    <div class="siri-status-group">
+                        <div class="siri-pulse-dot" aria-hidden="true"></div>
+                        <span class="siri-message">Listening...</span>
+                    </div>
+                    <div id="siri-container"></div>
+                    <button type="button" class="siri-cancel-btn" id="siriCancelBtn">Cancel</button>
+                </div>
+            </section>
+
+            <!-- Command Composer -->
+            <section class="composer-card" id="composerCard">
+                <div class="composer-input-row" id="TextInput">
+                    <input type="text" class="composer-input" name="chatbot" id="chatbot"
+                        placeholder="Ask anything ..." autocomplete="off" spellcheck="false">
+                </div>
+
+                <div class="composer-controls-row">
+                    <div class="composer-actions-left">
+                        <button type="button" class="composer-pill-btn" id="SearchPillBtn" title="Web &amp; Knowledge Search">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <span>Search</span>
+                        </button>
+
+                        <button type="button" class="composer-pill-btn" id="CreateImagePillBtn" title="Create Image">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="3" ry="3"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                            <span>Create Image</span>
+                        </button>
+
+                        <button type="button" class="composer-overflow-btn" id="ChatBtn" data-bs-toggle="offcanvas"
+                            data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling" title="Conversations &amp; History">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="5" cy="12" r="2"></circle>
+                                <circle cx="12" cy="12" r="2"></circle>
+                                <circle cx="19" cy="12" r="2"></circle>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="composer-actions-right">
+                        <!-- Sparkle Action Button (Triggers Voice Assistant / Mic) -->
+                        <button type="button" class="composer-sparkle-btn" id="MicBtn" title="Voice Assistant (Win+J)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z"/>
+                            </svg>
+                        </button>
+
+                        <!-- White Submit Button with Black Up-Arrow -->
+                        <button type="button" class="composer-submit-btn" id="SendBtn" title="Send message">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="19" x2="12" y2="5"></line>
+                                <polyline points="5 12 12 5 19 12"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Lower Section (Tools & Feature Cards) -->
+            <section class="tools-section" id="toolsSection">
+                <h3 class="tools-heading">Kickstart Your Journey with These Tools</h3>
+
+                <div class="tools-grid">
+                    <!-- Card 1 -->
+                    <article class="tool-card" id="cardLaunchAssistant">
+                        <h4 class="tool-card-title">Launch Your AI Assistant</h4>
+                        <p class="tool-card-desc">Create a custom AI assistant with skills and workflows built for your unique needs.</p>
+                        <div class="tool-card-footer">
+                            <span class="tool-card-link">Learn more &rarr;</span>
+                        </div>
+                    </article>
+
+                    <!-- Card 2 -->
+                    <article class="tool-card" id="cardFineTune">
+                        <h4 class="tool-card-title">Fine-tune a model</h4>
+                        <p class="tool-card-desc">Train an AI model using your data to deliver smarter, tailored results.</p>
+                        <div class="tool-card-footer">
+                            <span class="tool-card-link">Learn more &rarr;</span>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Offcanvas Recent Chats Drawer -->
+        <div class="offcanvas offcanvas-start chat-canvas" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1"
+            id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
+            <div class="offcanvas-header">
+                <div class="offcanvas-title-group">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber-primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Recent Chats</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+
+            <div class="drawer-toolbar">
+                <button type="button" class="drawer-new-chat-btn" id="drawerNewChatBtn" title="Start a fresh conversation">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>New Chat</span>
+                </button>
+            </div>
+
+            <div class="offcanvas-body recent-chats-body">
+                <div id="recentChatsList" class="recent-chats-list">
+                    <!-- Conversations rendered dynamically here -->
+                </div>
+
+                <div id="recentChatsEmpty" class="recent-chats-empty" style="display: none;">
+                    <div class="empty-icon-wrap">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <p class="empty-title">No conversations yet</p>
+                    <span class="empty-desc">Your chat history will be automatically saved here.</span>
+                </div>
+
+                <!-- Hidden container for backwards compatibility -->
+                <div id="chat-canvas-body" style="display: none;"></div>
+            </div>
         </div>
-        <div id="chat-canvas-body" class="offcanvas-body">
-            <!-- Chatting code here -->
 
-        </div>
+        <!-- Toast Notification Element -->
+        <div id="jarvisToast" class="jarvis-toast"></div>
+
+        <!-- Hidden canvas for legacy compatibility -->
+        <canvas id="canvasOne" width="1" height="1" style="display:none;"></canvas>
+
     </div>
 
-    <!--Jquery  -->
+    <!-- Scripts -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-
-
-    <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
         crossorigin="anonymous"></script>
 
-    <!-- particle js -->
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.js"></script>
-    <script src="script.js"></script>
-
-    <!-- jarvis call wave -->
+    <!-- SiriWave Library -->
     <script src="https://unpkg.com/siriwave/dist/siriwave.umd.min.js"></script>
-
-    <!-- textlate js-->
-    <script src="assets/vendore/texllate/jquery.fittext.js"></script>
-    <script src="assets/vendore/texllate/jquery.lettering.js"></script>
-    <script src="http://jschr.github.io/textillate/jquery.textillate.js"></script>
 
     <script src="main.js"></script>
     <script src="controller.js"></script>
     <script src="/eel.js"></script>
-
-
 
 </body>
 

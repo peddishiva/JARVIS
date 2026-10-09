@@ -1,6 +1,11 @@
 """JARVIS Admin Dashboard package."""
 
-from app.admin.server import create_app, run_admin_server
+from app.admin.server import (
+    create_app,
+    run_admin_server,
+    is_admin_server_running,
+    open_admin_dashboard,
+)
 from app.admin.auth import (
     admin_exists,
     create_admin_user,
@@ -18,6 +23,8 @@ from app.admin.services import (
 __all__ = [
     "create_app",
     "run_admin_server",
+    "is_admin_server_running",
+    "open_admin_dashboard",
     "admin_exists",
     "create_admin_user",
     "authenticate_admin",

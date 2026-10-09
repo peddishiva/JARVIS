@@ -1,49 +1,77 @@
 {% extends "base.html" %}
 
 {% block title %}Manage Contacts — JARVIS Admin{% endblock %}
+{% block page_subtitle %}WhatsApp Address Book & Messaging Triggers{% endblock %}
 {% block page_title %}Contacts Management{% endblock %}
+
+{% block page_actions %}
+<button class="btn btn-primary btn-sm" data-open-modal="modal-add-contact">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19"></line>
+    <line x1="5" y1="12" x2="19" y2="12"></line>
+  </svg>
+  Add Contact
+</button>
+{% endblock %}
 
 {% block content %}
 <div class="table-container">
   <div class="table-header-bar">
     <form method="GET" action="{{ url_for('admin.contacts') }}" class="search-box">
-      <input type="text" name="q" class="form-control" placeholder="Search by name, phone..." value="{{ query }}">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" name="q" class="form-control" placeholder="Search contacts by name or phone..." value="{{ query }}">
       {% if query %}
         <a href="{{ url_for('admin.contacts') }}" class="btn btn-secondary btn-sm">Clear</a>
       {% endif %}
     </form>
-    <button class="btn btn-primary" data-open-modal="modal-add-contact">
-      + Add Contact
+    <button class="btn btn-secondary btn-sm" data-open-modal="modal-add-contact">
+      + New Contact
     </button>
   </div>
 
   <table class="data-table">
     <thead>
       <tr>
-        <th style="width: 60px;">ID</th>
-        <th>Name</th>
+        <th style="width: 70px;">ID</th>
+        <th>Contact Name</th>
         <th>Mobile Number</th>
-        <th>Email</th>
-        <th style="width: 140px; text-align: right;">Actions</th>
+        <th>Email Address</th>
+        <th style="width: 160px; text-align: right;">Actions</th>
       </tr>
     </thead>
     <tbody>
       {% for contact in contacts %}
       <tr>
-        <td style="color: var(--text-muted);">{{ contact.id }}</td>
-        <td><strong>{{ contact.name }}</strong></td>
-        <td><code>{{ contact.mobile_no }}</code></td>
-        <td style="color: var(--text-muted);">{{ contact.email or '—' }}</td>
-        <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
-          <button class="btn btn-secondary btn-sm" data-open-modal="modal-edit-{{ contact.id }}">
-            Edit
-          </button>
-          <form method="POST" action="{{ url_for('admin.delete_contact', contact_id=contact.id) }}" class="delete-form" data-entity-name="contact '{{ contact.name }}'">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-danger btn-sm">
-              Delete
+        <td style="color: var(--text-muted); font-family: var(--font-mono); font-size: 12px;">#{{ contact.id }}</td>
+        <td>
+          <div style="font-weight: 600; color: var(--text-primary);">{{ contact.name }}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Voice keyword: &ldquo;{{ contact.name }}&rdquo;</div>
+        </td>
+        <td>
+          <span class="code-pill">{{ contact.mobile_no }}</span>
+        </td>
+        <td style="color: var(--text-secondary); font-size: 13px;">
+          {% if contact.email %}
+            {{ contact.email }}
+          {% else %}
+            <span style="color: var(--text-muted);">&mdash;</span>
+          {% endif %}
+        </td>
+        <td>
+          <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+            <button class="btn btn-secondary btn-sm" data-open-modal="modal-edit-{{ contact.id }}" title="Edit contact details">
+              Edit
             </button>
-          </form>
+            <form method="POST" action="{{ url_for('admin.delete_contact', contact_id=contact.id) }}" class="delete-form" data-entity-name="contact '{{ contact.name }}'">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-danger btn-sm" title="Delete contact">
+                Delete
+              </button>
+            </form>
+          </div>
         </td>
       </tr>
 
@@ -58,17 +86,19 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
               <label class="form-label">Full Name</label>
-              <input type="text" name="name" class="form-control" value="{{ contact.name }}" required maxlength="100">
+              <input type="text" name="name" class="form-control" value="{{ contact.name }}" required maxlength="100" placeholder="e.g. Shiva">
+              <span class="form-hint">Used for voice recognition commands (e.g., &ldquo;send message to Shiva&rdquo;).</span>
             </div>
             <div class="form-group">
               <label class="form-label">Mobile Number</label>
               <input type="text" name="mobile_no" class="form-control" value="{{ contact.mobile_no }}" required placeholder="e.g. +919876543210">
+              <span class="form-hint">Include country code for WhatsApp automation.</span>
             </div>
             <div class="form-group">
               <label class="form-label">Email (Optional)</label>
-              <input type="email" name="email" class="form-control" value="{{ contact.email }}">
+              <input type="email" name="email" class="form-control" value="{{ contact.email or '' }}" placeholder="shiva@example.com">
             </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+            <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
               <button type="submit" class="btn btn-primary">Save Changes</button>
             </div>
@@ -77,12 +107,35 @@
       </div>
       {% else %}
       <tr>
-        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px;">
-          {% if query %}
-            No contacts found matching "{{ query }}".
-          {% else %}
-            No contacts registered yet. Click "+ Add Contact" to get started.
-          {% endif %}
+        <td colspan="5">
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <line x1="23" y1="11" x2="17" y2="11"></line>
+              </svg>
+            </div>
+            <div class="empty-state-title">
+              {% if query %}
+                No contacts match &ldquo;{{ query }}&rdquo;
+              {% else %}
+                No Contacts Configured
+              {% endif %}
+            </div>
+            <div class="empty-state-desc">
+              {% if query %}
+                Check the search query or clear the filter to view all contacts.
+              {% else %}
+                Add contacts with mobile numbers to enable voice-activated WhatsApp messaging in JARVIS.
+              {% endif %}
+            </div>
+            {% if not query %}
+              <button class="btn btn-primary btn-sm" data-open-modal="modal-add-contact" style="margin-top: 14px;">
+                + Add Your First Contact
+              </button>
+            {% endif %}
+          </div>
         </td>
       </tr>
       {% endfor %}
@@ -102,16 +155,18 @@
       <div class="form-group">
         <label class="form-label">Full Name</label>
         <input type="text" name="name" class="form-control" required maxlength="100" placeholder="e.g. Shiva">
+        <span class="form-hint">Used by JARVIS voice command parsing (e.g., &ldquo;send message to Shiva&rdquo;).</span>
       </div>
       <div class="form-group">
         <label class="form-label">Mobile Number</label>
         <input type="text" name="mobile_no" class="form-control" required placeholder="e.g. +919876543210">
+        <span class="form-hint">Must include international dial code prefix.</span>
       </div>
       <div class="form-group">
         <label class="form-label">Email (Optional)</label>
-        <input type="email" name="email" class="form-control" placeholder="name@example.com">
+        <input type="email" name="email" class="form-control" placeholder="shiva@example.com">
       </div>
-      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+      <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
         <button type="submit" class="btn btn-primary">Create Contact</button>
       </div>

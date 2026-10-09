@@ -1,66 +1,156 @@
 {% extends "base.html" %}
 
 {% block title %}Dashboard Overview — JARVIS Admin{% endblock %}
+{% block page_subtitle %}Runtime Telemetry & Shortcuts{% endblock %}
 {% block page_title %}System Overview{% endblock %}
 
 {% block content %}
 <div class="grid-cards">
   <div class="metric-card">
-    <span class="metric-label">Contacts</span>
-    <span class="metric-value">{{ summary.contacts_count }}</span>
-    <span style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">WhatsApp address book</span>
+    <div class="metric-header">
+      <span class="metric-label">Registered Contacts</span>
+      <div class="metric-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </div>
+    </div>
+    <div class="metric-value">{{ summary.contacts_count }}</div>
+    <div class="metric-hint">WhatsApp voice messaging address book</div>
   </div>
 
   <div class="metric-card">
-    <span class="metric-label">Web Commands</span>
-    <span class="metric-value">{{ summary.web_commands_count }}</span>
-    <span style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Voice web shortcuts</span>
+    <div class="metric-header">
+      <span class="metric-label">Web Shortcuts</span>
+      <div class="metric-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+      </div>
+    </div>
+    <div class="metric-value">{{ summary.web_commands_count }}</div>
+    <div class="metric-hint">Voice-activated browser destinations</div>
   </div>
 
   <div class="metric-card">
-    <span class="metric-label">System Commands</span>
-    <span class="metric-value">{{ summary.sys_commands_count }}</span>
-    <span style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Registered desktop apps</span>
+    <div class="metric-header">
+      <span class="metric-label">Desktop Apps</span>
+      <div class="metric-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+      </div>
+    </div>
+    <div class="metric-value">{{ summary.sys_commands_count }}</div>
+    <div class="metric-hint">Registered Windows system commands</div>
   </div>
 
   <div class="metric-card">
-    <span class="metric-label">AI Status (OpenRouter)</span>
-    <div>
+    <div class="metric-header">
+      <span class="metric-label">AI Engine</span>
+      <div class="metric-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+          <path d="M12 12L2.1 12.05"></path>
+          <path d="M12 12a10 10 0 0 0 7.07-2.93"></path>
+        </svg>
+      </div>
+    </div>
+    <div style="margin: 4px 0 6px;">
       {% if summary.openrouter_configured %}
-        <span class="metric-badge badge-success">API Key Configured</span>
+        <span class="badge badge-success">
+          <span class="badge-dot"></span>
+          Active & Ready
+        </span>
       {% else %}
-        <span class="metric-badge badge-warning">Not Configured (.env)</span>
+        <span class="badge badge-warning">
+          <span class="badge-dot"></span>
+          Key Missing (.env)
+        </span>
       {% endif %}
     </div>
-    <span style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">LLM Service Connection</span>
+    <div class="metric-hint">OpenRouter LLM cognitive connection</div>
   </div>
 </div>
 
-<div class="table-container" style="padding: 24px; margin-bottom: 24px;">
-  <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--accent-cyan);">Runtime & Environment Details</h3>
-  <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
-    <tr style="border-bottom: 1px solid var(--border-color);">
-      <td style="padding: 10px 0; color: var(--text-muted); width: 220px;">Database File</td>
-      <td style="padding: 10px 0;"><strong>{{ summary.database_name }}</strong></td>
-    </tr>
-    <tr style="border-bottom: 1px solid var(--border-color);">
-      <td style="padding: 10px 0; color: var(--text-muted);">Database Connection State</td>
-      <td style="padding: 10px 0;"><span style="color: var(--accent-green);">●</span> {{ summary.database_status }}</td>
-    </tr>
-    <tr style="border-bottom: 1px solid var(--border-color);">
-      <td style="padding: 10px 0; color: var(--text-muted);">Security Posture</td>
-      <td style="padding: 10px 0;">Localhost only (127.0.0.1) &mdash; Authenticated Sessions</td>
-    </tr>
-    <tr>
-      <td style="padding: 10px 0; color: var(--text-muted);">Active Administrators</td>
-      <td style="padding: 10px 0;">{{ summary.admin_users_count }}</td>
-    </tr>
-  </table>
+<div class="table-container" style="padding: 24px 28px; margin-bottom: 24px;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+    <div>
+      <h3 style="font-size: 15px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; margin-bottom: 4px;">Runtime & Security Environment</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Live SQLite connection status and host environment isolation parameters.</p>
+    </div>
+    <span class="badge badge-neutral">Localhost Isolated</span>
+  </div>
+
+  <div style="border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden;">
+    <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+      <tbody>
+        <tr style="border-bottom: 1px solid var(--border-subtle); background: rgba(255, 255, 255, 0.01);">
+          <td style="padding: 12px 18px; color: var(--text-muted); width: 240px; font-weight: 500;">Database Filename</td>
+          <td style="padding: 12px 18px; font-weight: 600; font-family: var(--font-mono); color: var(--amber-glow);">{{ summary.database_name }}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border-subtle);">
+          <td style="padding: 12px 18px; color: var(--text-muted); font-weight: 500;">Connection Health</td>
+          <td style="padding: 12px 18px;">
+            <span class="badge badge-success" style="font-size: 11px; padding: 2px 8px;">
+              <span class="badge-dot"></span>
+              {{ summary.database_status }}
+            </span>
+          </td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border-subtle); background: rgba(255, 255, 255, 0.01);">
+          <td style="padding: 12px 18px; color: var(--text-muted); font-weight: 500;">Network & Session Defense</td>
+          <td style="padding: 12px 18px; color: var(--text-secondary);">
+            Loopback Binding (127.0.0.1:5005) &bull; Synchronizer Token CSRF &bull; SameSite=Lax HttpOnly Cookies
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 18px; color: var(--text-muted); font-weight: 500;">Active Administrators</td>
+          <td style="padding: 12px 18px; color: var(--text-primary); font-weight: 500;">
+            {{ summary.admin_users_count }} registered account{% if summary.admin_users_count != 1 %}s{% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<div style="display: flex; gap: 16px;">
-  <a href="{{ url_for('admin.contacts') }}" class="btn btn-primary">Manage Contacts</a>
-  <a href="{{ url_for('admin.web_commands') }}" class="btn btn-secondary">Manage Web Commands</a>
-  <a href="{{ url_for('admin.system_commands') }}" class="btn btn-secondary">Manage System Commands</a>
+<div class="table-container" style="padding: 20px 24px;">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Management Consoles</h4>
+      <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Quick access to configure JARVIS voice capabilities and contact records.</p>
+    </div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+      <a href="{{ url_for('admin.contacts') }}" class="btn btn-primary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+        </svg>
+        Manage Contacts
+      </a>
+      <a href="{{ url_for('admin.web_commands') }}" class="btn btn-secondary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+        </svg>
+        Web Shortcuts
+      </a>
+      <a href="{{ url_for('admin.system_commands') }}" class="btn btn-secondary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+        </svg>
+        Desktop Apps
+      </a>
+    </div>
+  </div>
 </div>
 {% endblock %}

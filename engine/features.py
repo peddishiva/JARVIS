@@ -53,6 +53,14 @@ def playAssistantSound():
         pygame.time.Clock().tick(10)
 
 
+@eel.expose
+def openAdminDashboard():
+    """Expose dedicated Admin Dashboard browser launcher to Eel frontend."""
+    from app.admin import open_admin_dashboard
+
+    return open_admin_dashboard()
+
+
 def openCommand(query):
     return open_command(query, speak_fn=speak)
 

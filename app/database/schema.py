@@ -34,6 +34,36 @@ CREATE TABLE IF NOT EXISTS admin_user(
 )
 """
 
+CONVERSATIONS_TABLE_DDL = """
+CREATE TABLE IF NOT EXISTS conversations(
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_archived INTEGER DEFAULT 0
+)
+"""
+
+MESSAGES_TABLE_DDL = """
+CREATE TABLE IF NOT EXISTS messages(
+    id TEXT PRIMARY KEY,
+    conversation_id TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('user', 'assistant', 'system')),
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    sequence_number INTEGER NOT NULL,
+    FOREIGN KEY(conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
+)
+"""
+
+CONVERSATIONS_INDEX_DDL = """
+CREATE INDEX IF NOT EXISTS idx_conversations_updated_at ON conversations(updated_at DESC)
+"""
+
+MESSAGES_INDEX_DDL = """
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_seq ON messages(conversation_id, sequence_number ASC)
+"""
+
 
 def initialize_schema(connection):
     """Execute the authoritative schema DDL against the provided connection."""
@@ -42,3 +72,7 @@ def initialize_schema(connection):
     cursor.execute(WEB_COMMAND_TABLE_DDL)
     cursor.execute(CONTACTS_TABLE_DDL)
     cursor.execute(ADMIN_USER_TABLE_DDL)
+    cursor.execute(CONVERSATIONS_TABLE_DDL)
+    cursor.execute(MESSAGES_TABLE_DDL)
+    cursor.execute(CONVERSATIONS_INDEX_DDL)
+    cursor.execute(MESSAGES_INDEX_DDL)
